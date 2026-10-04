@@ -1,4 +1,5 @@
-const BASE_URL = 'http://192.168.10.122:8080';
+//const BASE_URL = 'http://192.168.10.122:8080';
+const BASE_URL = 'https://ysc-dev.duckdns.org';
 
 export const getMsgList = async (
   menuId: string,

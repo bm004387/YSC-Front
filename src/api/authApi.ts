@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://192.168.10.122:8080';
+// const API_BASE_URL = 'http://192.168.10.122:8080';
+const API_BASE_URL = 'https://ysc-dev.duckdns.org';
 
 export interface UserInfo {
   userId: string;
