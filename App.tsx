@@ -1,45 +1,60 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, {useState} from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import {
   SafeAreaProvider,
-  useSafeAreaInsets,
+  SafeAreaView,
 } from 'react-native-safe-area-context';
 
+import styles from './src/styles/common';
+
+import LoginScreen from './src/screens/LoginScreen';
+import SignupScreen from './src/screens/SignupScreen';
+import MainScreen from './src/screens/MainScreen';
+
+type Screen = 'login' | 'signup' | 'main';
+
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [screen, setScreen] = useState<Screen>('login');
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={['top', 'bottom']}>
+
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={
+            Platform.OS === 'ios'
+              ? 'padding'
+              : undefined
+          }>
+
+          {screen === 'login' && (
+            <LoginScreen
+              onSignup={() => setScreen('signup')}
+              onLoginSuccess={() => setScreen('main')}
+            />
+          )}
+
+          {screen === 'signup' && (
+            <SignupScreen
+              onLogin={() => setScreen('login')}
+            />
+          )}
+
+          {screen === 'main' && (
+            <MainScreen />
+          )}
+
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;
