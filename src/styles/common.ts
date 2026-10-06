@@ -68,9 +68,8 @@ const commonStyles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  // 필수값 *
   required: {
-    color: '#E53935',
+    color: colors.error,
     fontWeight: '700',
   },
 
@@ -85,21 +84,30 @@ const commonStyles = StyleSheet.create({
     backgroundColor: colors.gray50,
   },
 
+  inputFocused: {
+    borderColor: colors.black,
+    backgroundColor: colors.white,
+  },
+
+  inputDisabled: {
+    backgroundColor: colors.gray200,
+    color: colors.gray500,
+  },
+
   inputError: {
-    borderColor: '#E53935',
+    borderColor: colors.error,
   },
 
   errorText: {
     marginTop: 6,
     fontSize: 12,
-    color: '#E53935',
+    color: colors.error,
   },
 
-  // 사용 가능한 아이디
   availableText: {
     marginTop: 6,
     fontSize: 12,
-    color: '#2E7D32',
+    color: colors.success,
   },
 
   primaryButton: {
@@ -117,7 +125,6 @@ const commonStyles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // 회원가입 버튼 비활성화
   disabledButton: {
     backgroundColor: colors.gray200,
   },
@@ -154,7 +161,6 @@ const commonStyles = StyleSheet.create({
     color: colors.gray700,
   },
 
-  // 아이디
   idInputArea: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -180,7 +186,50 @@ const commonStyles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // 주소
+  phoneInputArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  phoneInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+
+  smsButton: {
+    width: 90,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: colors.black,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  smsButtonText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  verifyInputArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
+  verifyInput: {
+    flex: 1,
+  },
+
+  verifyButton: {
+    width: 90,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: colors.black,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   addressInputArea: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -206,7 +255,36 @@ const commonStyles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // 메인 화면
+  subInput: {
+    marginTop: 8,
+  },
+
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+
+  modalHeader: {
+    height: 56,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray200,
+  },
+
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.black,
+  },
+
+  modalClose: {
+    fontSize: 14,
+    color: colors.gray700,
+  },
+
   mainContainer: {
     flex: 1,
     justifyContent: 'center',

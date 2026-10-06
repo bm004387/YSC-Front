@@ -15,44 +15,58 @@ import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import MainScreen from './src/screens/MainScreen';
 
-type Screen = 'login' | 'signup' | 'main';
+import {MsgProvider} from './src/context/MsgContext';
+
+type Screen =
+  | 'login'
+  | 'signup'
+  | 'main';
 
 function App() {
-  const [screen, setScreen] = useState<Screen>('login');
+  const [screen, setScreen] =
+    useState<Screen>('login');
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView
-        style={styles.safeArea}
-        edges={['top', 'bottom']}>
+      <MsgProvider>
+        <SafeAreaView
+          style={styles.safeArea}
+          edges={['top', 'bottom']}>
 
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={
-            Platform.OS === 'ios'
-              ? 'padding'
-              : undefined
-          }>
+          <KeyboardAvoidingView
+            style={styles.container}
+            behavior={
+              Platform.OS === 'ios'
+                ? 'padding'
+                : undefined
+            }>
 
-          {screen === 'login' && (
-            <LoginScreen
-              onSignup={() => setScreen('signup')}
-              onLoginSuccess={() => setScreen('main')}
-            />
-          )}
+            {screen === 'login' && (
+              <LoginScreen
+                onSignup={() =>
+                  setScreen('signup')
+                }
+                onLoginSuccess={() =>
+                  setScreen('main')
+                }
+              />
+            )}
 
-          {screen === 'signup' && (
-            <SignupScreen
-              onLogin={() => setScreen('login')}
-            />
-          )}
+            {screen === 'signup' && (
+              <SignupScreen
+                onLogin={() =>
+                  setScreen('login')
+                }
+              />
+            )}
 
-          {screen === 'main' && (
-            <MainScreen />
-          )}
+            {screen === 'main' && (
+              <MainScreen />
+            )}
 
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </MsgProvider>
     </SafeAreaProvider>
   );
 }

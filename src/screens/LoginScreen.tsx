@@ -27,7 +27,9 @@ function LoginScreen({
 
   const [userId, setUserId] = useState('');
   const [passwd, setPasswd] = useState('');
-  const [messages, setMessages] = useState<Record<string, string>>({});
+
+  const [messages, setMessages] =
+    useState<Record<string, string>>({});
 
   const [userIdError, setUserIdError] = useState('');
   const [passwdError, setPasswdError] = useState('');
@@ -36,17 +38,27 @@ function LoginScreen({
     loadMessages();
   }, []);
 
+  /**
+   * 전체 메시지 조회
+   */
   const loadMessages = async () => {
 
-  try {
-    const result = await getMsgList('AUTH');
-    setMessages(result);
+    try {
+
+      const result = await getMsgList();
+
+      setMessages(result);
 
     } catch (error) {
+
       console.error('메시지 조회 실패:', error);
+
     }
   };
 
+  /**
+   * 로그인
+   */
   const handleLogin = async () => {
 
     let isValid = true;
@@ -56,13 +68,21 @@ function LoginScreen({
 
     // 아이디 검사
     if (!userId.trim()) {
-      setUserIdError(getMsg(messages, '001'));
+
+      setUserIdError(
+        getMsg(messages, 'COMMON', '001'),
+      );
+
       isValid = false;
     }
 
     // 비밀번호 검사
     if (!passwd.trim()) {
-      setPasswdError(getMsg(messages, '008'));
+
+      setPasswdError(
+        getMsg(messages, 'COMMON', '002'),
+      );
+
       isValid = false;
     }
 
@@ -74,7 +94,10 @@ function LoginScreen({
     try {
 
       // Spring Boot 로그인 API 호출
-      const response = await login(userId.trim(),passwd,);
+      const response = await login(
+        userId.trim(),
+        passwd,
+      );
 
       // Access Token을 iOS Keychain에 저장
       await Keychain.setGenericPassword(
@@ -84,10 +107,17 @@ function LoginScreen({
           service: 'ysc-auth',
         },
       );
+
       console.log(response);
+
       Alert.alert(
         '로그인 성공',
-        getMsg(messages, '009', response.user.userName),
+        getMsg(
+          messages,
+          'AUTH',
+          '003',
+          response.user.userNm,
+        ),
         [
           {
             text: '확인',
@@ -99,10 +129,13 @@ function LoginScreen({
     } catch (error) {
 
       if (error instanceof Error) {
+
         setPasswdError(error.message);
+
       } else {
+
         setPasswdError(
-          '로그인에 실패했습니다.',
+          getMsg(messages, 'AUTH', '001'),
         );
       }
     }
@@ -218,7 +251,6 @@ function LoginScreen({
           </Text>
 
         </TouchableOpacity>
-
         {/* 회원가입 */}
         <View style={styles.bottomArea}>
 

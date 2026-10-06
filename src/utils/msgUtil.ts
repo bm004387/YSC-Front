@@ -1,27 +1,24 @@
-export const formatMsg = (
-  message: string,
-  ...args: string[]
-): string => {
-
-  if (!message) {
-    return '';
-  }
-
-  return message.replace(
-    /\{(\d+)\}/g,
-    (_, index: string) => {
-      return args[Number(index)] ?? '';
-    },
-  );
-};
-
 export const getMsg = (
   messages: Record<string, string>,
+  menuId: string,
   msgCd: string,
   ...args: string[]
 ): string => {
 
-  const message = messages[msgCd] ?? '';
+  const key = `${menuId}:${msgCd}`;
 
-  return formatMsg(message, ...args);
+  let message = messages[key];
+
+  if (!message) {
+    return `${menuId}_${msgCd}`;
+  }
+
+  args.forEach((arg, index) => {
+    message = message.replace(
+      `{${index}}`,
+      arg,
+    );
+  });
+
+  return message;
 };
