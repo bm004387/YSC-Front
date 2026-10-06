@@ -1,133 +1,69 @@
 import React, {useState} from 'react';
 
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
+import {Text, TextInput, TouchableOpacity, View} from 'react-native';
 import commonStyles from '../../styles/common';
-
 import AddressSearchModal from './AddressSearchModal';
 
 interface AddressInputProps {
-  addr: string;
-  dtlAddr: string;
-  onAddrChange: (value: string) => void;
-  onDtlAddrChange: (value: string) => void;
+  value: string;
+  detailValue: string;
+  onChangeText: (value: string) => void;
+  onDetailChangeText: (value: string) => void;
 }
 
 const AddressInput = ({
-  addr,
-  dtlAddr,
-  onAddrChange,
-  onDtlAddrChange,
+  value,
+  detailValue,
+  onChangeText,
+  onDetailChangeText,
 }: AddressInputProps) => {
 
-  const [
-    isSearchVisible,
-    setIsSearchVisible,
-  ] = useState(false);
-
-  const [
-    isDetailFocused,
-    setIsDetailFocused,
-  ] = useState(false);
-
-  const handleSelect = (
-    address: string,
-  ) => {
-    onAddrChange(address);
-    setIsSearchVisible(false);
-  };
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   return (
-    <View
-      style={commonStyles.inputGroup}>
-
-      <Text
-        style={commonStyles.label}>
-
+    <View style={commonStyles.inputGroup}>
+      <Text style={commonStyles.label}>
         주소
-
-        <Text
-          style={commonStyles.required}>
-          {' '}*
-        </Text>
-
+        <Text style={commonStyles.required}> *</Text>
       </Text>
 
-      <View
-        style={
-          commonStyles.addressInputArea
+      {/* 주소 */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() =>
+          setIsModalVisible(true)
         }>
 
-        <TextInput
-          style={[
-            commonStyles.input,
-            commonStyles.addressInput,
-            commonStyles.inputDisabled,
-          ]}
-          placeholder="주소 검색을 이용해주세요"
-          placeholderTextColor="#999999"
-          value={addr}
-          editable={false}
-        />
+        <View pointerEvents="none">
+          <TextInput
+            style={commonStyles.input}
+            placeholder="주소를 입력해주세요"
+            placeholderTextColor="#999999"
+            value={value}
+            editable={false}
+          />
+        </View>
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          style={
-            commonStyles.addressButton
-          }
-          onPress={() =>
-            setIsSearchVisible(true)
-          }
-          activeOpacity={0.8}>
-
-          <Text
-            style={
-              commonStyles.addressButtonText
-            }>
-            주소 검색
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-
+      {/* 상세주소 */}
       <TextInput
-        style={[
-          commonStyles.input,
-          commonStyles.subInput,
-          isDetailFocused &&
-            commonStyles.inputFocused,
+        style={[commonStyles.input,
+          {marginTop: 8}
         ]}
-        placeholder={
-          isDetailFocused
-            ? ''
-            : '상세주소를 입력해주세요 (선택)'
-        }
+        placeholder="상세주소를 입력해주세요"
         placeholderTextColor="#999999"
-        value={dtlAddr}
-        onChangeText={
-          onDtlAddrChange
-        }
-        onFocus={() =>
-          setIsDetailFocused(true)
-        }
-        onBlur={() =>
-          setIsDetailFocused(false)
-        }
+        value={detailValue}
+        onChangeText={onDetailChangeText}
       />
 
       <AddressSearchModal
-        visible={isSearchVisible}
-        onClose={() =>
-          setIsSearchVisible(false)
-        }
-        onSelect={handleSelect}
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSelect={(selectedAddress) => {
+          onChangeText(selectedAddress);
+          setIsModalVisible(false);
+        }}
       />
-
     </View>
   );
 };

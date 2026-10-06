@@ -261,7 +261,6 @@ const commonStyles = StyleSheet.create({
 
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.background,
   },
 
   modalHeader: {

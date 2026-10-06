@@ -1,17 +1,9 @@
 import React from 'react';
 
-import {
-  Modal,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Modal, Text, TouchableOpacity, View} from 'react-native';
 
-import {
-  WebView,
-  WebViewMessageEvent,
-} from 'react-native-webview';
-
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import commonStyles from '../../styles/common';
 
 interface AddressSearchModalProps {
@@ -26,77 +18,95 @@ const AddressSearchModal = ({
   onSelect,
 }: AddressSearchModalProps) => {
 
-  const addressSearchHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-/>
+  const postcodeHTML = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <meta
+      name="viewport"
+      content="width=device-width,
+              initial-scale=1.0,
+              maximum-scale=1.0,
+              minimum-scale=1.0,
+              user-scalable=no"
+    >
 
-<style>
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #FFFFFF;
+      }
 
-#postcode {
-  width: 100%;
-  height: 100%;
-}
-</style>
-</head>
+      #container {
+        width: 100%;
+        height: 100%;
+      }
 
-<body>
-<div id="postcode"></div>
+    </style>
+  </head>
+  <body>
 
-<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <div id="container"></div>
 
-<script>
-new daum.Postcode({
-  oncomplete: function(data) {
-    var address =
-      data.roadAddress ||
-      data.jibunAddress ||
-      '';
+    <script
+      src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js">
+    </script>
 
-    window.ReactNativeWebView.postMessage(
-      JSON.stringify({
-        address: address
-      })
-    );
-  }
-}).embed(
-  document.getElementById('postcode')
-);
-</script>
+    <script>
 
-</body>
-</html>
+      function init() {
+        new daum.Postcode({
+          oncomplete: function(data) {
+            var address =
+              data.roadAddress ||
+              data.jibunAddress ||
+              '';
+
+            if (address) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                  address: address
+                })
+              );
+
+            }
+          },
+
+          width: '100%',
+          height: '100%',
+
+          animation: true,
+          hideMapBtn: true
+
+        }).embed(
+          document.getElementById('container')
+        );
+      }
+
+      window.addEventListener(
+        'DOMContentLoaded',
+        init
+      );
+
+    </script>
+  </body>
+  </html>
 `;
 
-  const handleMessage = (
-    event: WebViewMessageEvent,
-  ) => {
+  const handleMessage = (event: WebViewMessageEvent) => {
     try {
-      const data = JSON.parse(
-        event.nativeEvent.data,
-      ) as {
-        address?: string;
-      };
+      const data = JSON.parse(event.nativeEvent.data,) as {address?: string};
 
       if (data.address) {
         onSelect(data.address);
       }
     } catch (e) {
-      console.error(
-        '주소 검색 결과 처리 실패:',
-        e,
-      );
+      console.error('주소 검색 결과 처리 실패:', e);
     }
   };
 
@@ -104,47 +114,68 @@ new daum.Postcode({
     <Modal
       visible={visible}
       animationType="slide"
+      presentationStyle="fullScreen"
       onRequestClose={onClose}>
 
-      <View
-        style={commonStyles.modalContainer}>
+      <SafeAreaProvider>
+        <SafeAreaView
+          style={{flex: 1, backgroundColor: '#FFFFFF'}}
+          edges={['top', 'bottom']}>
 
-        <View
-          style={commonStyles.modalHeader}>
+          {/* 헤더 */}
+          <View
+            style={{
+              height: 56,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 20,
+              borderBottomWidth: 1,
+              borderBottomColor: '#E5E5E5',
+              backgroundColor: '#FFFFFF',
+            }}>
 
-          <Text
-            style={commonStyles.modalTitle}>
-            주소 검색
-          </Text>
-
-          <TouchableOpacity
-            onPress={onClose}
-            activeOpacity={0.7}>
-
-            <Text
-              style={commonStyles.modalClose}>
-              닫기
+            <Text style={commonStyles.modalTitle}>
+              주소 검색
             </Text>
+            <TouchableOpacity
+              style={{
+                minWidth: 60,
+                minHeight: 44,
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+              }}
+              onPress={onClose}
+              activeOpacity={0.7}>
 
-          </TouchableOpacity>
+              <Text style={commonStyles.modalClose}>
+                닫기
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        </View>
+          {/* 주소 검색 */}
+          <View
+            style={{
+              flex: 1,
+              width: '100%',
+              overflow: 'hidden',
+            }}>
 
-        <WebView
-          source={{
-            html: addressSearchHtml,
-          }}
-          onMessage={handleMessage}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          originWhitelist={['*']}
-          style={{
-            flex: 1,
-          }}
-        />
-
-      </View>
-
+            <WebView
+              source={{html: postcodeHTML, baseUrl: 'https://postcode.map.daum.net'}}
+              onMessage={handleMessage}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              originWhitelist={['*']}
+              automaticallyAdjustContentInsets={false}
+              bounces={false}
+              scrollEnabled={false}
+              style={{flex: 1,width: '100%'}}
+            />
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 };

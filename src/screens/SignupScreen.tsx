@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 
-import {Alert, ScrollView, Text, View} from 'react-native';
+import {Alert, ScrollView, Text, TouchableOpacity, View} from 'react-native';
 import AppButton from '../components/common/AppButton';
 import AppInput from '../components/common/AppInput';
 import IdCheckInput from '../components/auth/IdCheckInput';
@@ -11,14 +11,9 @@ import useMsg from '../hooks/useMsg';
 import {checkUserId, signup} from '../api/authApi';
 import {sendSms, verifySms} from '../api/msgApi';
 
-interface SignupScreenProps {
-  onLogin: () => void;
-}
+interface SignupScreenProps {onLogin: () => void}
 
-const SignupScreen = ({
-  onLogin,
-}: SignupScreenProps) => {
-
+const SignupScreen = ({onLogin}: SignupScreenProps) => {
   const {getMsg} = useMsg();
 
   /*
@@ -44,7 +39,6 @@ const SignupScreen = ({
   const [smsError, setSmsError] = useState('');
 
   const handleUserIdChange = (value: string,) => {
-
     setUserId(value);
     setIsUserIdChecked(false);
     setIsUserIdAvailable(false);
@@ -55,9 +49,7 @@ const SignupScreen = ({
    */
   const handleUserIdCheck = async () => {
       if (!userId.trim()) {
-        Alert.alert(
-          '알림', getMsg('COMMON','001'),
-        );
+        Alert.alert('알림', getMsg('COMMON','001'));
         return;
       }
       try {
@@ -219,6 +211,14 @@ const SignupScreen = ({
       <ScrollView
         contentContainerStyle={commonStyles.content}
         keyboardShouldPersistTaps="handled">
+        <TouchableOpacity
+          style={commonStyles.backButton}
+          onPress={onLogin}
+          activeOpacity={0.7}>
+          <Text style={commonStyles.backText}>
+            ‹ 뒤로
+          </Text>
+        </TouchableOpacity>
         <Text
           style={commonStyles.title}>
           회원가입
@@ -300,10 +300,10 @@ const SignupScreen = ({
 
         {/* 주소 */}
         <AddressInput
-          addr={addr}
-          dtlAddr={dtlAddr}
-          onAddrChange={setAddr}
-          onDtlAddrChange={setDtlAddr}
+          value={addr}
+          detailValue={dtlAddr}
+          onChangeText={setAddr}
+          onDetailChangeText={setDtlAddr}
         />
 
         {/* 회원가입 */}
