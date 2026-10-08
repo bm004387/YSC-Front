@@ -1,12 +1,16 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, View, Text, TextInput, TouchableOpacity, ScrollView} from 'react-native';
-
-import * as Keychain from 'react-native-keychain';
+import {Alert, Pressable, View, Text, TextInput, TouchableOpacity, ScrollView} from 'react-native';
 
 import styles from '../styles/common';
 import {login} from '../api/authApi';
 import {getMsgList} from '../api/msgApi';
 import {getMsg} from '../utils/msgUtil';
+import {
+  clearRememberedUserId,
+  getRememberedUserId,
+  saveAuthCredentials,
+  saveRememberedUserId,
+} from '../storage/tokenStorage';
 
 interface LoginScreenProps {
   onSignup: () => void;
@@ -20,6 +24,7 @@ function LoginScreen({
 
   const [usrId, setUsrId] = useState('');
   const [pwd, setPwd] = useState('');
+  const [rememberId, setRememberId] = useState(false);
 
   const [messages, setMessages] = useState<Record<string, string>>({});
   const [usrIdError, setUsrIdError] = useState('');
@@ -27,7 +32,35 @@ function LoginScreen({
 
   useEffect(() => {
     loadMessages();
+    loadRememberedId();
   }, []);
+
+  const loadRememberedId = async () => {
+    try {
+      const rememberedUserId = await getRememberedUserId();
+      if (rememberedUserId) {
+        setUsrId(rememberedUserId);
+        setRememberId(true);
+      }
+    } catch (error) {
+      console.error('저장된 아이디 조회 실패:', error);
+    }
+  };
+
+  const toggleRememberId = async () => {
+    const nextValue = !rememberId;
+    setRememberId(nextValue);
+
+    try {
+      if (nextValue && usrId.trim()) {
+        await saveRememberedUserId(usrId.trim());
+      } else if (!nextValue) {
+        await clearRememberedUserId();
+      }
+    } catch (error) {
+      console.error('아이디 저장 설정 실패:', error);
+    }
+  };
 
   /**
    * 전체 메시지 조회
@@ -76,14 +109,17 @@ function LoginScreen({
       // Spring Boot 로그인 API 호출
       const response = await login(usrId.trim(), pwd);
 
-      // Access Token을 iOS Keychain에 저장
-      await Keychain.setGenericPassword(
+      // Access Token을 Keychain에 저장
+      await saveAuthCredentials(
         response.user.usrId,
         response.accessToken,
-        {
-          service: 'ysc-auth',
-        },
       );
+
+      if (rememberId) {
+        await saveRememberedUserId(response.user.usrId);
+      } else {
+        await clearRememberedUserId();
+      }
 
       // console.log(response);
 
@@ -109,9 +145,13 @@ function LoginScreen({
   return (
     <ScrollView
       contentContainerStyle={styles.scrollContainer}
+      scrollEnabled={false}
+      bounces={false}
+      alwaysBounceVertical={false}
+      overScrollMode="never"
       keyboardShouldPersistTaps="handled">
 
-      <View style={styles.content}>
+      <View style={[styles.content, styles.loginContent]}>
 
         {/* Logo */}
         <View style={styles.logoContainer}>
@@ -196,6 +236,25 @@ function LoginScreen({
             </Text>
           ) : null}
         </View>
+
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{checked: rememberId}}
+          style={styles.rememberIdRow}
+          onPress={toggleRememberId}>
+          <View
+            style={[
+              styles.rememberIdBox,
+              rememberId && styles.rememberIdBoxChecked,
+            ]}>
+            {rememberId && (
+              <Text style={styles.rememberIdCheckmark}>✓</Text>
+            )}
+          </View>
+          <Text style={styles.rememberIdLabel}>
+            아이디 저장 및 다음 실행 시 자동 로그인
+          </Text>
+        </Pressable>
 
         {/* 로그인 버튼 */}
         <TouchableOpacity

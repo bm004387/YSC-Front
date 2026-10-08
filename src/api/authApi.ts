@@ -12,6 +12,19 @@ interface LoginResponse {
   user: LoginUser;
 }
 
+export async function validateSession(accessToken: string): Promise<void> {
+  const response = await fetch(`${BASE_URL}/api/auth/session`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`로그인 세션이 유효하지 않습니다. (${response.status})`);
+  }
+}
+
 export async function login(
   usrId: string,
   pwd: string,

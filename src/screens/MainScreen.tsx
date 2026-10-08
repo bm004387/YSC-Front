@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
 
-import * as Keychain from 'react-native-keychain';
-
 import {Alert, Pressable, Text, View} from 'react-native';
 import mainStyles from '../styles/main';
 import {logout} from '../api/authApi';
 import {getMsgList} from '../api/msgApi';
 import {getMsg} from '../utils/msgUtil';
+import {clearAuthCredentials, getAuthCredentials} from '../storage/tokenStorage';
 
 interface MainScreenProps {
   onLogout: () => void;
@@ -61,7 +60,7 @@ function MainScreen({
 
     try {
 
-      const credentials = await Keychain.getGenericPassword({service: 'ysc-auth'});
+      const credentials = await getAuthCredentials();
 
       if (credentials) {
         await logout(credentials.password);
@@ -72,7 +71,7 @@ function MainScreen({
 
     } finally {
       // 로컬 토큰 삭제
-      await Keychain.resetGenericPassword({service: 'ysc-auth'});
+      await clearAuthCredentials();
 
       // 로그아웃 완료 메시지
       Alert.alert('로그아웃', getMsg(messages, 'AUTH', '005'),

@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -21,13 +22,15 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import BottomNavigation from './src/components/common/BottomNavigation';
 import {getBottomMenuList} from './src/api/menuApi';
 import type {MenuItem} from './src/api/menuApi';
+import {validateSession} from './src/api/authApi';
+import {getAuthCredentials, getRememberedUserId} from './src/storage/tokenStorage';
 
 import {MsgProvider} from './src/context/MsgContext';
 
-type Screen = 'login' | 'signup' | 'main' | 'myInfo' | 'settings';
+type Screen = 'loading' | 'login' | 'signup' | 'main' | 'myInfo' | 'settings';
 
 function App() {
-  const [screen, setScreen] = useState<Screen>('login');
+  const [screen, setScreen] = useState<Screen>('loading');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
@@ -50,6 +53,31 @@ function App() {
       setMenuLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const [rememberedUserId, credentials] = await Promise.all([
+          getRememberedUserId(),
+          getAuthCredentials(),
+        ]);
+
+        if (rememberedUserId && credentials) {
+          await validateSession(credentials.password);
+          setScreen('main');
+          void loadMenus();
+          return;
+        }
+      } catch (error) {
+        // 서버 연결 실패 또는 만료된 토큰이면 로그인 화면으로 이동합니다.
+        console.info('자동 로그인 세션 확인 실패:', error);
+      }
+
+      setScreen('login');
+    };
+
+    void restoreSession();
+  }, []);
 
   const handleMenuSelect = (item: MenuItem) => {
     if (item.programUrl === 'main' || item.programUrl === 'myInfo' || item.programUrl === 'settings') {
@@ -79,6 +107,12 @@ function App() {
                   void loadMenus();
                 }}
               />
+            )}
+
+            {screen === 'loading' && (
+              <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                <ActivityIndicator size="small" />
+              </View>
             )}
 
             {screen === 'signup' && (
