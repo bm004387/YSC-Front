@@ -195,6 +195,9 @@ function LoginScreen({
             }}
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
           />
 
           {usrIdError ? (
@@ -228,6 +231,9 @@ function LoginScreen({
               }
             }}
             secureTextEntry
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
           />
 
           {pwdError ? (

@@ -261,7 +261,9 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="new-password"
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
         />
 
         {/* 비밀번호 확인 */}
@@ -274,7 +276,9 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="new-password"
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
           error={pwdError}
         />
 

@@ -207,6 +207,9 @@ function MyInfoScreen({
               placeholder="현재 비밀번호"
               placeholderTextColor="#A0A0A0"
               secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
 
             <TextInput
@@ -214,6 +217,9 @@ function MyInfoScreen({
               placeholder="새 비밀번호"
               placeholderTextColor="#A0A0A0"
               secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
 
             <TextInput
@@ -221,6 +227,9 @@ function MyInfoScreen({
               placeholder="새 비밀번호 확인"
               placeholderTextColor="#A0A0A0"
               secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
 
             <Pressable
@@ -268,12 +277,18 @@ function MyInfoScreen({
               style={myInfoStyles.input}
               placeholder="주소"
               placeholderTextColor="#A0A0A0"
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
 
             <TextInput
               style={myInfoStyles.input}
               placeholder="상세 주소"
               placeholderTextColor="#A0A0A0"
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
             />
 
             <Pressable

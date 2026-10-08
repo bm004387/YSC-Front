@@ -41,6 +41,9 @@ const AddressInput = ({
             placeholderTextColor="#999999"
             value={value}
             editable={false}
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
           />
         </View>
       </TouchableOpacity>
@@ -54,6 +57,9 @@ const AddressInput = ({
         placeholderTextColor="#999999"
         value={detailValue}
         onChangeText={onDetailChangeText}
+        autoComplete="off"
+        textContentType="none"
+        importantForAutofill="no"
       />
 
       <AddressSearchModal

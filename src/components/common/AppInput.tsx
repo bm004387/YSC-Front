@@ -50,6 +50,9 @@ const AppInput = ({
       </Text>
 
       <TextInput
+        autoComplete="off"
+        textContentType="none"
+        importantForAutofill="no"
         {...props}
         style={[
           commonStyles.input,

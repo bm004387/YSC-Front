@@ -76,6 +76,9 @@ const IdCheckInput = ({
           }
           autoCapitalize="none"
           autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
           returnKeyType="next"
         />
 

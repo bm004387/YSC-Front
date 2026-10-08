@@ -149,6 +149,9 @@ const SmsVerifyInput = ({
           onBlur={() => setIsPhoneFocused(false)}
           keyboardType="phone-pad"
           maxLength={11}
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
         />
 
         <TouchableOpacity
@@ -187,7 +190,9 @@ const SmsVerifyInput = ({
             onBlur={() =>setIsCodeFocused(false)}
             keyboardType="number-pad"
             maxLength={6}
-            autoComplete="one-time-code"
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
             />
         </View>
         </>
