@@ -1,8 +1,8 @@
 const BASE_URL = 'https://ysc-dev.duckdns.org';
 
 interface LoginUser {
-  userId: string;
-  userNm: string;
+  usrId: string;
+  usrNm: string;
 }
 
 interface LoginResponse {
@@ -13,31 +13,57 @@ interface LoginResponse {
 }
 
 export async function login(
-  userId: string,
-  passwd: string,
+  usrId: string,
+  pwd: string,
 ): Promise<LoginResponse> {
   return request<LoginResponse>(
     '/api/auth/login',
     {
       method: 'POST',
       body: JSON.stringify({
-        userId,
-        passwd,
+        usrId,
+        pwd,
       }),
     },
   );
 }
 
-export const checkUserId =
+export const logout = async (
+  accessToken: string,
+): Promise<{
+  message: string;
+}> => {
+
+  const response = await fetch(
+    `${BASE_URL}/api/auth/logout`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message ?? `로그아웃에 실패했습니다. (${response.status})`);
+  }
+
+  return data;
+};
+
+export const checkUsrId =
   async (
-    userId: string,
+    usrId: string,
   ): Promise<{
     available: boolean;
   }> => {
 
     const response =
       await fetch(
-        `${BASE_URL}/api/auth/check-user-id?userId=${encodeURIComponent(userId,)}`,
+        `${BASE_URL}/api/auth/check-user-id?usrId=${encodeURIComponent(usrId,)}`,
       );
 
     const data =
@@ -55,12 +81,12 @@ export const checkUserId =
 
 export const signup =
   async (
-    userId: string,
-    passwd: string,
-    userNm: string,
+    usrId: string,
+    pwd: string,
+    usrNm: string,
     hpNo: string,
-    addr: string,
-    dtlAddr: string,
+    adr: string,
+    dtlAdr: string,
   ) => {
 
     const response =
@@ -73,12 +99,12 @@ export const signup =
               'application/json',
           },
           body: JSON.stringify({
-            userId,
-            passwd,
-            userNm,
+            usrId,
+            pwd,
+            usrNm,
             hpNo,
-            addr,
-            dtlAddr,
+            adr,
+            dtlAdr,
           }),
         },
       );

@@ -8,7 +8,7 @@ import SmsVerifyInput from '../components/auth/SmsVerifyInput';
 import AddressInput from '../components/address/AddressInput';
 import commonStyles from '../styles/common';
 import useMsg from '../hooks/useMsg';
-import {checkUserId, signup} from '../api/authApi';
+import {checkUsrId, signup} from '../api/authApi';
 import {sendSms, verifySms} from '../api/msgApi';
 
 interface SignupScreenProps {onLogin: () => void}
@@ -19,43 +19,43 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
   /*
    * 회원정보
    */
-  const [userId,setUserId] = useState('');
-  const [userNm,setUserNm] = useState('');
-  const [passwd, setPasswd] = useState('');
-  const [passwdConfirm, setPasswdConfirm] = useState('');
+  const [usrId,setUsrId] = useState('');
+  const [usrNm,setUsrNm] = useState('');
+  const [pwd, setPwd] = useState('');
+  const [pwdConfirm, setPwdConfirm] = useState('');
   const [hpNo, setHpNo] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [addr, setAddr] = useState('');
+  const [adr, setAddr] = useState('');
   const [dtlAddr, setDtlAddr] = useState('');
 
   /*
    * 아이디 중복확인
    */
-  const [isUserIdChecked, setIsUserIdChecked] = useState(false);
-  const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
+  const [isUsrIdChecked, setIsUsrIdChecked] = useState(false);
+  const [isUsrIdAvailable, setIsUsrIdAvailable] = useState(false);
   const [isSmsSending, setIsSmsSending] = useState(false);
   const [isSmsSent, setIsSmsSent] = useState(false);
   const [isHpNoVerified, setIsHpNoVerified] = useState(false);
   const [smsError, setSmsError] = useState('');
 
-  const handleUserIdChange = (value: string,) => {
-    setUserId(value);
-    setIsUserIdChecked(false);
-    setIsUserIdAvailable(false);
+  const handleUsrIdChange = (value: string,) => {
+    setUsrId(value);
+    setIsUsrIdChecked(false);
+    setIsUsrIdAvailable(false);
   };
 
   /*
    * 아이디 중복확인
    */
-  const handleUserIdCheck = async () => {
-      if (!userId.trim()) {
+  const handleUsrIdCheck = async () => {
+      if (!usrId.trim()) {
         Alert.alert('알림', getMsg('COMMON','001'));
         return;
       }
       try {
-        const result = await checkUserId(userId.trim());
-        setIsUserIdChecked(true);
-        setIsUserIdAvailable(result.available);
+        const result = await checkUsrId(usrId.trim());
+        setIsUsrIdChecked(true);
+        setIsUsrIdAvailable(result.available);
       } catch (e: any) {
         Alert.alert('알림',e?.message ?? getMsg('SIGNUP','004'),
         );
@@ -155,22 +155,22 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
   /*
    * 비밀번호 확인 오류
    */
-  const passwdError = passwdConfirm.length > 0 && passwd !== passwdConfirm
+  const pwdError = pwdConfirm.length > 0 && pwd !== pwdConfirm
       ? getMsg('COMMON','003') : undefined;
 
   /*
    * 회원가입 버튼 활성화
    */
-  const isSignupEnabled = userId.trim().length > 0 &&
-                          isUserIdChecked &&
-                          isUserIdAvailable &&
-                          userNm.trim().length > 0 &&
-                          passwd.length > 0 &&
-                          passwdConfirm.length > 0 &&
-                          passwd === passwdConfirm &&
+  const isSignupEnabled = usrId.trim().length > 0 &&
+                          isUsrIdChecked &&
+                          isUsrIdAvailable &&
+                          usrNm.trim().length > 0 &&
+                          pwd.length > 0 &&
+                          pwdConfirm.length > 0 &&
+                          pwd === pwdConfirm &&
                           hpNo.trim().length > 0 &&
                           isHpNoVerified &&
-                          addr.trim().length > 0;
+                          adr.trim().length > 0;
 
   /*
    * 회원가입
@@ -182,11 +182,11 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
 
       try {
         await signup(
-                  userId.trim(),
-                  passwd,
-                  userNm.trim(),
+                  usrId.trim(),
+                  pwd,
+                  usrNm.trim(),
                   hpNo.trim(),
-                  addr.trim(),
+                  adr.trim(),
                   dtlAddr.trim(),
                 );
 
@@ -231,11 +231,11 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
 
         {/* 아이디 */}
         <IdCheckInput
-          value={userId}
-          checked={isUserIdChecked}
-          available={isUserIdAvailable}
-          onChangeText={handleUserIdChange}
-          onCheck={handleUserIdCheck}
+          value={usrId}
+          checked={isUsrIdChecked}
+          available={isUsrIdAvailable}
+          onChangeText={handleUsrIdChange}
+          onCheck={handleUsrIdCheck}
           availableMsg={getMsg('SIGNUP', '002')}
           unavailableMsg={getMsg('SIGNUP', '001')}
         />
@@ -245,8 +245,8 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
           label="이름"
           required
           placeholder="이름을 입력해주세요"
-          value={userNm}
-          onChangeText={setUserNm}
+          value={usrNm}
+          onChangeText={setUsrNm}
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -256,8 +256,8 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
           label="비밀번호"
           required
           placeholder="비밀번호를 입력해주세요"
-          value={passwd}
-          onChangeText={setPasswd}
+          value={pwd}
+          onChangeText={setPwd}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
@@ -269,13 +269,13 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
           label="비밀번호 확인"
           required
           placeholder="비밀번호를 다시 입력해주세요"
-          value={passwdConfirm}
-          onChangeText={setPasswdConfirm}
+          value={pwdConfirm}
+          onChangeText={setPwdConfirm}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="new-password"
-          error={passwdError}
+          error={pwdError}
         />
 
         {/* 휴대폰 + SMS 인증 */}
@@ -300,7 +300,7 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
 
         {/* 주소 */}
         <AddressInput
-          value={addr}
+          value={adr}
           detailValue={dtlAddr}
           onChangeText={setAddr}
           onDetailChangeText={setDtlAddr}

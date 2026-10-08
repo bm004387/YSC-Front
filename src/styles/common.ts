@@ -230,17 +230,17 @@ const commonStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  addressInputArea: {
+  adressInputArea: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
 
-  addressInput: {
+  adressInput: {
     flex: 1,
   },
 
-  addressButton: {
+  adressButton: {
     height: 54,
     paddingHorizontal: 14,
     borderRadius: 14,
@@ -249,7 +249,7 @@ const commonStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  addressButtonText: {
+  adressButtonText: {
     color: colors.white,
     fontSize: 13,
     fontWeight: '600',

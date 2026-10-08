@@ -9,7 +9,7 @@ import commonStyles from '../../styles/common';
 interface AddressSearchModalProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (address: string) => void;
+  onSelect: (adress: string) => void;
 }
 
 const AddressSearchModal = ({
@@ -63,14 +63,14 @@ const AddressSearchModal = ({
       function init() {
         new daum.Postcode({
           oncomplete: function(data) {
-            var address =
+            var adress =
               data.roadAddress ||
               data.jibunAddress ||
               '';
 
-            if (address) {
+            if (adress) {
               window.ReactNativeWebView.postMessage(JSON.stringify({
-                  address: address
+                  adress: adress
                 })
               );
 
@@ -100,10 +100,10 @@ const AddressSearchModal = ({
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data,) as {address?: string};
+      const data = JSON.parse(event.nativeEvent.data,) as {adress?: string};
 
-      if (data.address) {
-        onSelect(data.address);
+      if (data.adress) {
+        onSelect(data.adress);
       }
     } catch (e) {
       console.error('주소 검색 결과 처리 실패:', e);
