@@ -28,7 +28,7 @@ import {getAuthCredentials, getRememberedUserId} from './src/storage/tokenStorag
 import {MsgProvider} from './src/context/MsgContext';
 
 type Screen = 'loading' | 'login' | 'signup' | 'main' | 'myInfo' | 'settings';
-// ㅋ
+
 function App() {
   const [screen, setScreen] = useState<Screen>('loading');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
