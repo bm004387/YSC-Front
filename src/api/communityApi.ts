@@ -1,4 +1,4 @@
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
 
 export interface CommunityMedia {
   filSeq: number;
@@ -26,6 +26,10 @@ export interface CommunityComment {
   profileImageFilSeq: number | null;
   cmtCn: string;
   cmtDtm: string;
+  deleted?: boolean;
+}
+export interface CommunityCommentPreview extends CommunityComment {
+  postSeq: number;
 }
 export interface CommunityProfileSummary {
   postCount: number;
@@ -41,14 +45,23 @@ export type CommunityFeedType =
 export async function getCommunityFeed(
   token: string,
   type: CommunityFeedType,
+  limit = 50,
 ): Promise<CommunityPost[]> {
-  return request(`/api/community/feed?type=${type}`, token);
+  return request(`/api/community/feed?type=${type}&limit=${limit}`, token);
 }
 export async function getCommunityComments(
   token: string,
   postSeq: number,
 ): Promise<CommunityComment[]> {
   return request(`/api/community/posts/${postSeq}/comments`, token);
+}
+export async function getCommunityCommentPreviews(
+  token: string,
+  postSeqs: number[],
+): Promise<CommunityCommentPreview[]> {
+  if (postSeqs.length === 0) return [];
+  const query = postSeqs.map(postSeq => `postSeq=${postSeq}`).join('&');
+  return request(`/api/community/comments/previews?${query}`, token);
 }
 export async function addCommunityComment(
   token: string,
@@ -70,6 +83,15 @@ export async function updateCommunityComment(
   return request(`/api/community/posts/${postSeq}/comments/${cmtSeq}`, token, {
     method: 'PUT',
     body: JSON.stringify({ content }),
+  });
+}
+export async function deleteCommunityComment(
+  token: string,
+  postSeq: number,
+  cmtSeq: number,
+) {
+  return request(`/api/community/posts/${postSeq}/comments/${cmtSeq}`, token, {
+    method: 'DELETE',
   });
 }
 export async function getMyCommunityPosts(
@@ -131,7 +153,10 @@ async function request<T = unknown>(
 ): Promise<T> {
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
   if (!options.multipart) headers['Content-Type'] = 'application/json';
-  const response = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
   const data = await response.json().catch(() => ({}));
   if (!response.ok)
     throw new Error(

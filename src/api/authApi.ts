@@ -1,4 +1,4 @@
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
 
 interface LoginUser {
   usrId: string;
@@ -13,7 +13,7 @@ interface LoginResponse {
 }
 
 export async function validateSession(accessToken: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/api/auth/session`, {
+  const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -50,7 +50,7 @@ export const logout = async (
 }> => {
 
   const response = await fetch(
-    `${BASE_URL}/api/auth/logout`,
+    `${API_BASE_URL}/api/auth/logout`,
     {
       method: 'POST',
       headers: {
@@ -78,7 +78,7 @@ export const checkUsrId =
 
     const response =
       await fetch(
-        `${BASE_URL}/api/auth/check-user-id?usrId=${encodeURIComponent(usrId,)}`,
+        `${API_BASE_URL}/api/auth/check-user-id?usrId=${encodeURIComponent(usrId,)}`,
       );
 
     const data =
@@ -106,7 +106,7 @@ export const signup =
 
     const response =
       await fetch(
-        `${BASE_URL}/api/auth/signup`,
+        `${API_BASE_URL}/api/auth/signup`,
         {
           method: 'POST',
           headers: {
@@ -144,7 +144,7 @@ async function request<T>(
 
   const response =
     await fetch(
-      `${BASE_URL}${path}`,
+      `${API_BASE_URL}${path}`,
       {
         ...options,
         headers: {

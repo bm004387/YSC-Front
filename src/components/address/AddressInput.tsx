@@ -1,7 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 
-import {Text, TextInput, TouchableOpacity, View} from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import commonStyles from '../../styles/common';
+import TextInput from '../common/NoAutofillTextInput';
 import AddressSearchModal from './AddressSearchModal';
 
 interface AddressInputProps {
@@ -17,7 +18,6 @@ const AddressInput = ({
   onChangeText,
   onDetailChangeText,
 }: AddressInputProps) => {
-
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   return (
@@ -30,10 +30,8 @@ const AddressInput = ({
       {/* 주소 */}
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() =>
-          setIsModalVisible(true)
-        }>
-
+        onPress={() => setIsModalVisible(true)}
+      >
         <View pointerEvents="none">
           <TextInput
             style={commonStyles.input}
@@ -52,9 +50,7 @@ const AddressInput = ({
 
       {/* 상세주소 */}
       <TextInput
-        style={[commonStyles.input,
-          {marginTop: 8}
-        ]}
+        style={[commonStyles.input, { marginTop: 8 }]}
         placeholder="상세주소를 입력해주세요"
         placeholderTextColor="#999999"
         value={detailValue}
@@ -69,7 +65,7 @@ const AddressInput = ({
       <AddressSearchModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onSelect={(selectedAddress) => {
+        onSelect={selectedAddress => {
           onChangeText(selectedAddress);
           setIsModalVisible(false);
         }}

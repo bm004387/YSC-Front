@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -6,10 +6,9 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import AddressInput from '../components/address/AddressInput';
 import {
   changeMyAddress,
@@ -19,7 +18,7 @@ import {
   verifyCurrentPassword,
   UserProfile,
 } from '../api/userApi';
-import {getAuthCredentials} from '../storage/tokenStorage';
+import { getAuthCredentials } from '../storage/tokenStorage';
 import myInfoStyles from '../styles/myInfo';
 import useMsg from '../hooks/useMsg';
 
@@ -29,14 +28,22 @@ interface MyInfoScreenProps {
 
 type ModalType = 'password' | 'address' | null;
 const emptyProfile: UserProfile = {
-  usrId: '', usrNm: '', hpNo: '', adr: '', dtlAdr: '', profileImageUrl: null,
+  usrId: '',
+  usrNm: '',
+  hpNo: '',
+  adr: '',
+  dtlAdr: '',
+  profileImageUrl: null,
 };
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
+import TextInput from '../components/common/NoAutofillTextInput';
 
-function MyInfoScreen({onBack}: MyInfoScreenProps) {
-  const {getMsg} = useMsg();
+function MyInfoScreen({ onBack }: MyInfoScreenProps) {
+  const { getMsg } = useMsg();
   const [profile, setProfile] = useState<UserProfile>(emptyProfile);
-  const [profileImageVersion, setProfileImageVersion] = useState(() => Date.now());
+  const [profileImageVersion, setProfileImageVersion] = useState(() =>
+    Date.now(),
+  );
   const [profileImageLoadFailed, setProfileImageLoadFailed] = useState(false);
   const [accessToken, setAccessToken] = useState('');
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -45,18 +52,26 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
   const [pageMessage, setPageMessage] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
-  const [currentPasswordStatus, setCurrentPasswordStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [currentPasswordStatus, setCurrentPasswordStatus] = useState<
+    'idle' | 'checking' | 'valid' | 'invalid'
+  >('idle');
   const [currentPasswordMessage, setCurrentPasswordMessage] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
   const [detailAddress, setDetailAddress] = useState('');
-  const profileMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const profileMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const passwordVerificationRequest = useRef(0);
 
-  useEffect(() => () => {
-    if (profileMessageTimer.current) clearTimeout(profileMessageTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (profileMessageTimer.current)
+        clearTimeout(profileMessageTimer.current);
+    },
+    [],
+  );
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -69,21 +84,29 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
       setProfileImageLoadFailed(false);
       setPageMessage('');
     } catch (error) {
-      setPageMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
+      setPageMessage(
+        error instanceof Error ? error.message : getMsg('MYINFO', '010'),
+      );
     } finally {
       setLoading(false);
     }
   }, [getMsg]);
 
-  useEffect(() => { void loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   const openModal = (type: Exclude<ModalType, null>) => {
     setModalMessage('');
     if (type === 'password') {
-      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-      setCurrentPasswordStatus('idle'); setCurrentPasswordMessage('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setCurrentPasswordStatus('idle');
+      setCurrentPasswordMessage('');
     } else {
-      setAddress(profile.adr); setDetailAddress(profile.dtlAdr);
+      setAddress(profile.adr);
+      setDetailAddress(profile.dtlAdr);
     }
     setModalType(type);
   };
@@ -109,48 +132,66 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
     try {
       const credentials = await getAuthCredentials();
       if (!credentials) throw new Error(getMsg('MYINFO', '009'));
-      const result = await verifyCurrentPassword(credentials.password, currentPassword);
+      const result = await verifyCurrentPassword(
+        credentials.password,
+        currentPassword,
+      );
       if (requestId !== passwordVerificationRequest.current) return;
       setCurrentPasswordStatus(result.valid ? 'valid' : 'invalid');
       setCurrentPasswordMessage(result.message);
     } catch (error) {
       if (requestId !== passwordVerificationRequest.current) return;
       setCurrentPasswordStatus('invalid');
-      setCurrentPasswordMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
+      setCurrentPasswordMessage(
+        error instanceof Error ? error.message : getMsg('MYINFO', '010'),
+      );
     }
   };
 
   const submitPassword = async () => {
     setModalMessage('');
     if (currentPasswordStatus !== 'valid') {
-      if (!currentPasswordMessage) setCurrentPasswordMessage(getMsg('MYINFO', '001'));
+      if (!currentPasswordMessage)
+        setCurrentPasswordMessage(getMsg('MYINFO', '001'));
       setCurrentPasswordStatus('invalid');
       return;
     }
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setModalMessage(getMsg('COMMON', '002')); return;
+      setModalMessage(getMsg('COMMON', '002'));
+      return;
     }
     if (newPassword.length < 8) {
-      setModalMessage(getMsg('MYINFO', '002')); return;
+      setModalMessage(getMsg('MYINFO', '002'));
+      return;
     }
     if (newPassword !== confirmPassword) {
-      setModalMessage(getMsg('COMMON', '003')); return;
+      setModalMessage(getMsg('COMMON', '003'));
+      return;
     }
     setSaving(true);
     try {
       const credentials = await getAuthCredentials();
       if (!credentials) throw new Error(getMsg('MYINFO', '009'));
-      const result = await changeMyPassword(credentials.password, currentPassword, newPassword, confirmPassword);
+      const result = await changeMyPassword(
+        credentials.password,
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      );
       if (!result.success) {
         setCurrentPasswordStatus('invalid');
         setCurrentPasswordMessage(result.message);
         return;
       }
       setModalMessage(getMsg('MYINFO', '003'));
-      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-      setCurrentPasswordStatus('idle'); setCurrentPasswordMessage('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setCurrentPasswordStatus('idle');
+      setCurrentPasswordMessage('');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : getMsg('MYINFO', '008');
+      const errorMessage =
+        error instanceof Error ? error.message : getMsg('MYINFO', '008');
       const currentPasswordMismatchMessages = [
         getMsg('MYINFO', '001'),
         'MYINFO_001',
@@ -163,22 +204,39 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
       } else {
         setModalMessage(errorMessage);
       }
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const submitAddress = async () => {
     setModalMessage('');
-    if (!address.trim()) { setModalMessage(getMsg('COMMON', '007')); return; }
+    if (!address.trim()) {
+      setModalMessage(getMsg('COMMON', '007'));
+      return;
+    }
     setSaving(true);
     try {
       const credentials = await getAuthCredentials();
       if (!credentials) throw new Error(getMsg('MYINFO', '009'));
-      await changeMyAddress(credentials.password, address.trim(), detailAddress.trim());
-      setProfile(current => ({...current, adr: address.trim(), dtlAdr: detailAddress.trim()}));
+      await changeMyAddress(
+        credentials.password,
+        address.trim(),
+        detailAddress.trim(),
+      );
+      setProfile(current => ({
+        ...current,
+        adr: address.trim(),
+        dtlAdr: detailAddress.trim(),
+      }));
       setModalMessage(getMsg('MYINFO', '004'));
     } catch (error) {
-      setModalMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
-    } finally { setSaving(false); }
+      setModalMessage(
+        error instanceof Error ? error.message : getMsg('MYINFO', '010'),
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const chooseProfileImage = async () => {
@@ -186,8 +244,12 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
     setPageMessage('');
     try {
       const result = await launchImageLibrary({
-        mediaType: 'photo', selectionLimit: 1,
-        maxWidth: 640, maxHeight: 640, quality: 0.7, includeExtra: true,
+        mediaType: 'photo',
+        selectionLimit: 1,
+        maxWidth: 640,
+        maxHeight: 640,
+        quality: 0.7,
+        includeExtra: true,
       });
       if (result.didCancel) return;
       if (result.errorCode) {
@@ -206,19 +268,25 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
         name: uploadFilename(asset.fileName, asset.originalPath, asset.type),
         type: asset.type,
       });
-      setProfile(current => ({...current, profileImageUrl: response.profileImageUrl}));
+      setProfile(current => ({
+        ...current,
+        profileImageUrl: response.profileImageUrl,
+      }));
       setProfileImageVersion(Date.now());
       setProfileImageLoadFailed(false);
       setPageMessage(getMsg('MYINFO', '005'));
       profileMessageTimer.current = setTimeout(() => setPageMessage(''), 3000);
     } catch (error) {
-      setPageMessage(error instanceof Error ? error.message : getMsg('MYINFO', '008'));
-    } finally { setSaving(false); }
+      setPageMessage(
+        error instanceof Error ? error.message : getMsg('MYINFO', '008'),
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const renderMessage = (message: string) => message ? (
-    <Text style={myInfoStyles.message}>{message}</Text>
-  ) : null;
+  const renderMessage = (message: string) =>
+    message ? <Text style={myInfoStyles.message}>{message}</Text> : null;
 
   return (
     <View style={myInfoStyles.container}>
@@ -229,23 +297,37 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
         <Text style={myInfoStyles.headerTitle}>내 정보</Text>
       </View>
 
-      {loading ? <ActivityIndicator style={myInfoStyles.loader} color="#3867D6" /> : (
-        <ScrollView contentContainerStyle={{paddingBottom: 40}}>
+      {loading ? (
+        <ActivityIndicator style={myInfoStyles.loader} color="#3867D6" />
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={myInfoStyles.content}>
             <View style={myInfoStyles.profileArea}>
               {profile.profileImageUrl && !profileImageLoadFailed ? (
                 <Image
-                  source={{uri: `${BASE_URL}${profile.profileImageUrl}?v=${profileImageVersion}`, headers: {Authorization: `Bearer ${accessToken}`}, cache: 'reload'}}
+                  source={{
+                    uri: `${API_BASE_URL}${profile.profileImageUrl}?v=${profileImageVersion}`,
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                    cache: 'reload',
+                  }}
                   style={myInfoStyles.profileImage}
                   onError={() => setProfileImageLoadFailed(true)}
                 />
               ) : (
                 <View style={myInfoStyles.profileImage}>
-                  <Text style={myInfoStyles.profileText}>{profile.usrNm.slice(0, 1) || 'Y'}</Text>
+                  <Text style={myInfoStyles.profileText}>
+                    {profile.usrNm.slice(0, 1) || 'Y'}
+                  </Text>
                 </View>
               )}
-              <Pressable style={myInfoStyles.profileButton} onPress={() => void chooseProfileImage()} disabled={saving}>
-                <Text style={myInfoStyles.profileButtonText}>{saving ? '저장 중...' : '프로필 사진 변경'}</Text>
+              <Pressable
+                style={myInfoStyles.profileButton}
+                onPress={() => void chooseProfileImage()}
+                disabled={saving}
+              >
+                <Text style={myInfoStyles.profileButtonText}>
+                  {saving ? '저장 중...' : '프로필 사진 변경'}
+                </Text>
               </Pressable>
               {renderMessage(pageMessage)}
             </View>
@@ -256,11 +338,23 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
                 <InfoRow label="아이디" value={profile.usrId} />
                 <InfoRow label="이름" value={profile.usrNm} />
                 <InfoRow label="휴대폰" value={profile.hpNo} last />
-                <View style={[myInfoStyles.infoRow, myInfoStyles.infoRowLast, myInfoStyles.addressInfoRow]}>
+                <View
+                  style={[
+                    myInfoStyles.infoRow,
+                    myInfoStyles.infoRowLast,
+                    myInfoStyles.addressInfoRow,
+                  ]}
+                >
                   <Text style={myInfoStyles.infoLabel}>주소</Text>
                   <View style={myInfoStyles.addressValues}>
-                    <Text style={myInfoStyles.infoValue}>{profile.adr || '-'}</Text>
-                    {profile.dtlAdr ? <Text style={myInfoStyles.addressDetailValue}>{profile.dtlAdr}</Text> : null}
+                    <Text style={myInfoStyles.infoValue}>
+                      {profile.adr || '-'}
+                    </Text>
+                    {profile.dtlAdr ? (
+                      <Text style={myInfoStyles.addressDetailValue}>
+                        {profile.dtlAdr}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
               </View>
@@ -269,11 +363,19 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
             <View style={myInfoStyles.section}>
               <Text style={myInfoStyles.sectionTitle}>계정 설정</Text>
               <View style={myInfoStyles.settingCard}>
-                <Pressable style={myInfoStyles.settingRow} onPress={() => openModal('password')}>
-                  <Text style={myInfoStyles.settingTitle}>비밀번호 변경</Text><Text style={myInfoStyles.settingArrow}>›</Text>
+                <Pressable
+                  style={myInfoStyles.settingRow}
+                  onPress={() => openModal('password')}
+                >
+                  <Text style={myInfoStyles.settingTitle}>비밀번호 변경</Text>
+                  <Text style={myInfoStyles.settingArrow}>›</Text>
                 </Pressable>
-                <Pressable style={[myInfoStyles.settingRow, myInfoStyles.settingRowLast]} onPress={() => openModal('address')}>
-                  <Text style={myInfoStyles.settingTitle}>주소 변경</Text><Text style={myInfoStyles.settingArrow}>›</Text>
+                <Pressable
+                  style={[myInfoStyles.settingRow, myInfoStyles.settingRowLast]}
+                  onPress={() => openModal('address')}
+                >
+                  <Text style={myInfoStyles.settingTitle}>주소 변경</Text>
+                  <Text style={myInfoStyles.settingArrow}>›</Text>
                 </Pressable>
               </View>
             </View>
@@ -281,50 +383,164 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
         </ScrollView>
       )}
 
-      <Modal visible={modalType === 'password'} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={myInfoStyles.modalOverlay}><View style={myInfoStyles.modalContent}>
-          <Text style={myInfoStyles.modalTitle}>비밀번호 변경</Text>
-          <TextInput style={myInfoStyles.input} placeholder="현재 비밀번호" placeholderTextColor="#A0A0A0" value={currentPassword} onChangeText={value => {passwordVerificationRequest.current += 1; setCurrentPassword(value); setCurrentPasswordStatus('idle'); setCurrentPasswordMessage('');}} onBlur={() => void verifyCurrentPasswordOnBlur()} secureTextEntry autoComplete="off" textContentType="none" importantForAutofill="no" autoCorrect={false} spellCheck={false} />
-          {currentPasswordMessage ? <Text style={[myInfoStyles.message, currentPasswordStatus === 'valid' && myInfoStyles.messageSuccess]}>{currentPasswordMessage}</Text> : null}
-          <TextInput style={myInfoStyles.input} placeholder="새 비밀번호 (8자 이상)" placeholderTextColor="#A0A0A0" value={newPassword} onChangeText={setNewPassword} secureTextEntry autoComplete="off" textContentType="none" importantForAutofill="no" autoCorrect={false} spellCheck={false} />
-          <TextInput style={myInfoStyles.input} placeholder="새 비밀번호 확인" placeholderTextColor="#A0A0A0" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="off" textContentType="none" importantForAutofill="no" autoCorrect={false} spellCheck={false} />
-          {renderMessage(modalMessage)}
-          <Pressable style={[myInfoStyles.modalButton, (saving || currentPasswordStatus !== 'valid') && myInfoStyles.modalButtonDisabled]} onPress={() => void submitPassword()} disabled={saving || currentPasswordStatus !== 'valid'}><Text style={myInfoStyles.modalButtonText}>{saving ? '변경 중...' : '변경하기'}</Text></Pressable>
-          <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}><Text style={myInfoStyles.cancelButtonText}>취소</Text></Pressable>
-        </View></View>
+      <Modal
+        visible={modalType === 'password'}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={myInfoStyles.modalOverlay}>
+          <View style={myInfoStyles.modalContent}>
+            <Text style={myInfoStyles.modalTitle}>비밀번호 변경</Text>
+            <TextInput
+              style={myInfoStyles.input}
+              placeholder="현재 비밀번호"
+              placeholderTextColor="#A0A0A0"
+              value={currentPassword}
+              onChangeText={value => {
+                passwordVerificationRequest.current += 1;
+                setCurrentPassword(value);
+                setCurrentPasswordStatus('idle');
+                setCurrentPasswordMessage('');
+              }}
+              onBlur={() => void verifyCurrentPasswordOnBlur()}
+              secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+              autoCorrect={false}
+              spellCheck={false}
+            />
+            {currentPasswordMessage ? (
+              <Text
+                style={[
+                  myInfoStyles.message,
+                  currentPasswordStatus === 'valid' &&
+                    myInfoStyles.messageSuccess,
+                ]}
+              >
+                {currentPasswordMessage}
+              </Text>
+            ) : null}
+            <TextInput
+              style={myInfoStyles.input}
+              placeholder="새 비밀번호 (8자 이상)"
+              placeholderTextColor="#A0A0A0"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+              autoCorrect={false}
+              spellCheck={false}
+            />
+            <TextInput
+              style={myInfoStyles.input}
+              placeholder="새 비밀번호 확인"
+              placeholderTextColor="#A0A0A0"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+              autoCorrect={false}
+              spellCheck={false}
+            />
+            {renderMessage(modalMessage)}
+            <Pressable
+              style={[
+                myInfoStyles.modalButton,
+                (saving || currentPasswordStatus !== 'valid') &&
+                  myInfoStyles.modalButtonDisabled,
+              ]}
+              onPress={() => void submitPassword()}
+              disabled={saving || currentPasswordStatus !== 'valid'}
+            >
+              <Text style={myInfoStyles.modalButtonText}>
+                {saving ? '변경 중...' : '변경하기'}
+              </Text>
+            </Pressable>
+            <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}>
+              <Text style={myInfoStyles.cancelButtonText}>취소</Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
 
-      <Modal visible={modalType === 'address'} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={myInfoStyles.modalOverlay}><View style={myInfoStyles.modalContent}>
-          <Text style={myInfoStyles.modalTitle}>주소 변경</Text>
-          <AddressInput value={address} detailValue={detailAddress} onChangeText={setAddress} onDetailChangeText={setDetailAddress} />
-          {renderMessage(modalMessage)}
-          <Pressable style={myInfoStyles.modalButton} onPress={() => void submitAddress()} disabled={saving}><Text style={myInfoStyles.modalButtonText}>{saving ? '변경 중...' : '변경하기'}</Text></Pressable>
-          <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}><Text style={myInfoStyles.cancelButtonText}>취소</Text></Pressable>
-        </View></View>
+      <Modal
+        visible={modalType === 'address'}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={myInfoStyles.modalOverlay}>
+          <View style={myInfoStyles.modalContent}>
+            <Text style={myInfoStyles.modalTitle}>주소 변경</Text>
+            <AddressInput
+              value={address}
+              detailValue={detailAddress}
+              onChangeText={setAddress}
+              onDetailChangeText={setDetailAddress}
+            />
+            {renderMessage(modalMessage)}
+            <Pressable
+              style={myInfoStyles.modalButton}
+              onPress={() => void submitAddress()}
+              disabled={saving}
+            >
+              <Text style={myInfoStyles.modalButtonText}>
+                {saving ? '변경 중...' : '변경하기'}
+              </Text>
+            </Pressable>
+            <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}>
+              <Text style={myInfoStyles.cancelButtonText}>취소</Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
     </View>
   );
 }
 
-function uploadFilename(fileName?: string, originalPath?: string, contentType?: string) {
+function uploadFilename(
+  fileName?: string,
+  originalPath?: string,
+  contentType?: string,
+) {
   const pathName = originalPath?.split(/[\\/]/).pop();
   const sourceName = fileName || pathName;
-  const uuidFilename = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(\.[^.]+)?$/i;
+  const uuidFilename =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(\.[^.]+)?$/i;
   if (sourceName && !uuidFilename.test(sourceName)) return sourceName;
 
-  const fileExtension = contentType?.split('/')[1]?.toLowerCase() === 'jpeg'
-    ? 'jpg'
-    : contentType?.split('/')[1]?.toLowerCase() ?? 'jpg';
-  const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const fileExtension =
+    contentType?.split('/')[1]?.toLowerCase() === 'jpeg'
+      ? 'jpg'
+      : contentType?.split('/')[1]?.toLowerCase() ?? 'jpg';
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z');
   return `profile_${timestamp}.${fileExtension}`;
 }
 
-function InfoRow({label, value, last = false}: {label: string; value: string; last?: boolean}) {
-  return <View style={[myInfoStyles.infoRow, last && myInfoStyles.infoRowLast]}>
-    <Text style={myInfoStyles.infoLabel}>{label}</Text>
-    <Text style={myInfoStyles.infoValue}>{value || '-'}</Text>
-  </View>;
+function InfoRow({
+  label,
+  value,
+  last = false,
+}: {
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
+  return (
+    <View style={[myInfoStyles.infoRow, last && myInfoStyles.infoRowLast]}>
+      <Text style={myInfoStyles.infoLabel}>{label}</Text>
+      <Text style={myInfoStyles.infoValue}>{value || '-'}</Text>
+    </View>
+  );
 }
 
 export default MyInfoScreen;

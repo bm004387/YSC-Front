@@ -1,10 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {Alert, Pressable, View, Text, TextInput, TouchableOpacity, ScrollView} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import TextInput from '../components/common/NoAutofillTextInput';
 
 import styles from '../styles/common';
-import {login} from '../api/authApi';
-import {getMsgList} from '../api/msgApi';
-import {getMsg} from '../utils/msgUtil';
+import { login } from '../api/authApi';
+import { getMsgList } from '../api/msgApi';
+import { getMsg } from '../utils/msgUtil';
 import {
   clearRememberedUserId,
   getRememberedUserId,
@@ -17,11 +25,7 @@ interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
-function LoginScreen({
-  onSignup,
-  onLoginSuccess,
-}: LoginScreenProps) {
-
+function LoginScreen({ onSignup, onLoginSuccess }: LoginScreenProps) {
   const [usrId, setUsrId] = useState('');
   const [pwd, setPwd] = useState('');
   const [rememberId, setRememberId] = useState(false);
@@ -66,9 +70,7 @@ function LoginScreen({
    * 전체 메시지 조회
    */
   const loadMessages = async () => {
-
     try {
-
       const result = await getMsgList();
       setMessages(result);
     } catch (error) {
@@ -80,7 +82,6 @@ function LoginScreen({
    * 로그인
    */
   const handleLogin = async () => {
-
     let isValid = true;
 
     setUsrIdError('');
@@ -110,10 +111,7 @@ function LoginScreen({
       const response = await login(usrId.trim(), pwd, rememberId);
 
       // Access Token을 Keychain에 저장
-      await saveAuthCredentials(
-        response.user.usrId,
-        response.accessToken,
-      );
+      await saveAuthCredentials(response.user.usrId, response.accessToken);
 
       if (rememberId) {
         await saveRememberedUserId(response.user.usrId);
@@ -123,7 +121,9 @@ function LoginScreen({
 
       // console.log(response);
 
-      Alert.alert('로그인 성공', getMsg(messages,'AUTH','003',response.user.usrNm),
+      Alert.alert(
+        '로그인 성공',
+        getMsg(messages, 'AUTH', '003', response.user.usrNm),
         [
           {
             text: '확인',
@@ -131,9 +131,7 @@ function LoginScreen({
           },
         ],
       );
-
     } catch (error) {
-
       if (error instanceof Error) {
         setPwdError(error.message);
       } else {
@@ -149,23 +147,18 @@ function LoginScreen({
       bounces={false}
       alwaysBounceVertical={false}
       overScrollMode="never"
-      keyboardShouldPersistTaps="handled">
-
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={[styles.content, styles.loginContent]}>
-
         {/* Logo */}
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>
-              M
-            </Text>
+            <Text style={styles.logoText}>M</Text>
           </View>
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>
-          다시 만나서 반가워요
-        </Text>
+        <Text style={styles.title}>다시 만나서 반가워요</Text>
 
         <Text style={styles.subtitle}>
           계정에 로그인하고 서비스를 시작해보세요.
@@ -173,22 +166,15 @@ function LoginScreen({
 
         {/* 아이디 */}
         <View style={styles.inputGroup}>
-
-          <Text style={styles.label}>
-            아이디
-          </Text>
+          <Text style={styles.label}>아이디</Text>
 
           <TextInput
-            style={[
-              styles.input,
-              usrIdError
-                ? styles.inputError
-                : null,
-            ]}
+            style={[styles.input, usrIdError ? styles.inputError : null]}
             placeholder="아이디를 입력해주세요"
             placeholderTextColor="#A0A0A0"
             value={usrId}
-            onChangeText={text => {setUsrId(text);
+            onChangeText={text => {
+              setUsrId(text);
               if (text.trim()) {
                 setUsrIdError('');
               }
@@ -201,31 +187,21 @@ function LoginScreen({
           />
 
           {usrIdError ? (
-            <Text style={styles.errorText}>
-              {usrIdError}
-            </Text>
+            <Text style={styles.errorText}>{usrIdError}</Text>
           ) : null}
-
         </View>
 
         {/* 비밀번호 */}
         <View style={styles.inputGroup}>
-
-          <Text style={styles.label}>
-            비밀번호
-          </Text>
+          <Text style={styles.label}>비밀번호</Text>
 
           <TextInput
-            style={[
-              styles.input,
-              pwdError
-                ? styles.inputError
-                : null,
-            ]}
+            style={[styles.input, pwdError ? styles.inputError : null]}
             placeholder="비밀번호를 입력해주세요"
             placeholderTextColor="#A0A0A0"
             value={pwd}
-            onChangeText={text => {setPwd(text);
+            onChangeText={text => {
+              setPwd(text);
               if (text.trim()) {
                 setPwdError('');
               }
@@ -236,26 +212,22 @@ function LoginScreen({
             importantForAutofill="no"
           />
 
-          {pwdError ? (
-            <Text style={styles.errorText}>
-              {pwdError}
-            </Text>
-          ) : null}
+          {pwdError ? <Text style={styles.errorText}>{pwdError}</Text> : null}
         </View>
 
         <Pressable
           accessibilityRole="checkbox"
-          accessibilityState={{checked: rememberId}}
+          accessibilityState={{ checked: rememberId }}
           style={styles.rememberIdRow}
-          onPress={toggleRememberId}>
+          onPress={toggleRememberId}
+        >
           <View
             style={[
               styles.rememberIdBox,
               rememberId && styles.rememberIdBoxChecked,
-            ]}>
-            {rememberId && (
-              <Text style={styles.rememberIdCheckmark}>✓</Text>
-            )}
+            ]}
+          >
+            {rememberId && <Text style={styles.rememberIdCheckmark}>✓</Text>}
           </View>
           <Text style={styles.rememberIdLabel}>
             아이디 저장 및 다음 실행 시 자동 로그인
@@ -263,26 +235,15 @@ function LoginScreen({
         </Pressable>
 
         {/* 로그인 버튼 */}
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleLogin}>
-
-          <Text style={styles.primaryButtonText}>
-            로그인
-          </Text>
-
+        <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+          <Text style={styles.primaryButtonText}>로그인</Text>
         </TouchableOpacity>
         {/* 회원가입 */}
         <View style={styles.bottomArea}>
-
-          <Text style={styles.bottomText}>
-            아직 계정이 없으신가요?
-          </Text>
+          <Text style={styles.bottomText}>아직 계정이 없으신가요?</Text>
 
           <TouchableOpacity onPress={onSignup}>
-            <Text style={styles.linkText}>
-              회원가입
-            </Text>
+            <Text style={styles.linkText}>회원가입</Text>
           </TouchableOpacity>
         </View>
       </View>

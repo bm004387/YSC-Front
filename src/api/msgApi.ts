@@ -1,8 +1,8 @@
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
 
 export const getMsgList = async (): 
   Promise<Record<string, string>> => {
-    const response = await fetch(`${BASE_URL}/api/msg/all`);
+    const response = await fetch(`${API_BASE_URL}/api/msg/all`);
     if (!response.ok) {
       throw new Error(
         `메시지 조회에 실패했습니다. (${response.status})`,
@@ -13,7 +13,7 @@ export const getMsgList = async ():
 
   export const sendSms = async (hpNo: string):
     Promise<{success: boolean;message: string;}> => {
-      const response = await fetch(`${BASE_URL}/api/sms/send`,
+      const response = await fetch(`${API_BASE_URL}/api/sms/send`,
       {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
@@ -39,7 +39,7 @@ export const verifySms = async (
   success: boolean;
   message: string;
 }> => {
-  const response = await fetch(`${BASE_URL}/api/sms/verify`,
+  const response = await fetch(`${API_BASE_URL}/api/sms/verify`,
       {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},

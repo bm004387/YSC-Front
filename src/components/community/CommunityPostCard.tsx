@@ -10,12 +10,13 @@ import {
 import { CommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
 
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../../config/environment';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
   token: string;
   onOpen: (post: CommunityPost) => void;
+  onCommentOpen?: (post: CommunityPost) => void;
   onToggle: (post: CommunityPost, kind: 'like' | 'save') => void;
   showSaveAction?: boolean;
 }
@@ -24,6 +25,7 @@ function CommunityPostCard({
   post,
   token,
   onOpen,
+  onCommentOpen,
   onToggle,
   showSaveAction = true,
 }: CommunityPostCardProps) {
@@ -49,7 +51,7 @@ function CommunityPostCard({
           {post.profileImageFilSeq ? (
             <Image
               source={{
-                uri: `${BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
+                uri: `${API_BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
                 headers: { Authorization: `Bearer ${token}` },
               }}
               style={styles.avatarImage}
@@ -90,7 +92,7 @@ function CommunityPostCard({
             }}
           >
             {mediaItems.map(media => {
-              const uri = `${BASE_URL}/api/community/files/${media.filSeq}`;
+              const uri = `${API_BASE_URL}/api/community/files/${media.filSeq}`;
               const isImage = media.mediaType === 'IMAGE';
 
               return (
@@ -140,7 +142,10 @@ function CommunityPostCard({
             </Text>
           </Pressable>
           <Text style={styles.count}>{post.likeCount}</Text>
-          <Pressable style={styles.commentAction} onPress={() => onOpen(post)}>
+          <Pressable
+            style={styles.commentAction}
+            onPress={() => (onCommentOpen ?? onOpen)(post)}
+          >
             <View style={styles.commentBubble}>
               <View style={styles.commentBubbleTail} />
             </View>
@@ -173,11 +178,7 @@ function CommunityPostCard({
 }
 
 export function formatCommunityDate(value: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/.exec(value);
-  if (!match) return value;
-
-  const [, year, month, day, hour, minute, second] = match;
-  return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
+  return formatCommunityCommentDate(value);
 }
 
 export function formatCommunityCommentDate(value: string) {

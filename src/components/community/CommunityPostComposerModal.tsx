@@ -8,12 +8,12 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { Asset, launchImageLibrary } from 'react-native-image-picker';
 import { createCommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
+import TextInput from '../common/NoAutofillTextInput';
 
 const MAX_ATTACHMENTS = 5;
 

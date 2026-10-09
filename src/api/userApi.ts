@@ -1,4 +1,4 @@
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
 
 export interface UserProfile {
   usrId: string;
@@ -55,7 +55,7 @@ export async function saveMyProfileImage(
 ): Promise<{message: string; profileImageUrl: string}> {
   const form = new FormData();
   form.append('file', file);
-  const response = await fetch(`${BASE_URL}/api/user/me/profile-image`, {
+  const response = await fetch(`${API_BASE_URL}/api/user/me/profile-image`, {
     method: 'PUT',
     headers: {Authorization: `Bearer ${token}`},
     body: form,
@@ -66,7 +66,7 @@ export async function saveMyProfileImage(
 }
 
 async function request<T>(path: string, token: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

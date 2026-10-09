@@ -1,18 +1,11 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 
-import {
-  StyleProp,
-  Text,
-  TextInput,
-  TextInputProps,
-  TextStyle,
-  View,
-} from 'react-native';
+import { StyleProp, Text, TextInputProps, TextStyle, View } from 'react-native';
 
 import commonStyles from '../../styles/common';
+import TextInput from './NoAutofillTextInput';
 
-interface AppInputProps
-  extends TextInputProps {
+interface AppInputProps extends TextInputProps {
   label: string;
   required?: boolean;
   error?: string;
@@ -31,22 +24,14 @@ const AppInput = ({
   onBlur,
   ...props
 }: AppInputProps) => {
-  const [isFocused, setIsFocused] =
-    useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <View
-      style={commonStyles.inputGroup}>
-
+    <View style={commonStyles.inputGroup}>
       <Text style={commonStyles.label}>
         {label}
 
-        {required && (
-          <Text
-            style={commonStyles.required}>
-            {' '}*
-          </Text>
-        )}
+        {required && <Text style={commonStyles.required}> *</Text>}
       </Text>
 
       <TextInput
@@ -56,18 +41,12 @@ const AppInput = ({
         {...props}
         style={[
           commonStyles.input,
-          isFocused &&
-            commonStyles.inputFocused,
-          error &&
-            commonStyles.inputError,
+          isFocused && commonStyles.inputFocused,
+          error && commonStyles.inputError,
           inputStyle,
         ]}
-        placeholder={
-          isFocused ? '' : placeholder
-        }
-        placeholderTextColor={
-          '#999999'
-        }
+        placeholder={isFocused ? '' : placeholder}
+        placeholderTextColor={'#999999'}
         onFocus={event => {
           setIsFocused(true);
           onFocus?.(event);
@@ -78,22 +57,9 @@ const AppInput = ({
         }}
       />
 
-      {error && (
-        <Text
-          style={commonStyles.errorText}>
-          {error}
-        </Text>
-      )}
+      {error && <Text style={commonStyles.errorText}>{error}</Text>}
 
-      {success && (
-        <Text
-          style={
-            commonStyles.availableText
-          }>
-          {success}
-        </Text>
-      )}
-
+      {success && <Text style={commonStyles.availableText}>{success}</Text>}
     </View>
   );
 };

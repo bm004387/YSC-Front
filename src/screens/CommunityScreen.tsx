@@ -30,7 +30,7 @@ import useMsg from '../hooks/useMsg';
 import CommunityPostDetailScreen from './CommunityPostDetailScreen';
 import styles from '../styles/community';
 
-const BASE_URL = 'https://ysc-dev.duckdns.org';
+import { API_BASE_URL } from '../config/environment';
 type CommunityView = 'feed' | 'mine' | 'saved';
 
 interface CommunityScreenProps {
@@ -306,6 +306,13 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     }));
   };
 
+  const handleCommentDeleted = (postSeq: number) => {
+    updatePost(postSeq, current => ({
+      ...current,
+      commentCount: Math.max(0, current.commentCount - 1),
+    }));
+  };
+
   const renderAvatar = (
     post: CommunityPost,
     avatarStyle: StyleProp<ViewStyle>,
@@ -315,7 +322,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
       {post.profileImageFilSeq ? (
         <Image
           source={{
-            uri: `${BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
+            uri: `${API_BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
             headers: { Authorization: `Bearer ${token}` },
           }}
           style={styles.avatarImage}
@@ -339,7 +346,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         {firstMedia?.mediaType === 'IMAGE' ? (
           <Image
             source={{
-              uri: `${BASE_URL}/api/community/files/${firstMedia.filSeq}`,
+              uri: `${API_BASE_URL}/api/community/files/${firstMedia.filSeq}`,
               headers: { Authorization: `Bearer ${token}` },
             }}
             style={styles.gridImage}
@@ -547,10 +554,13 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
       )}
       <CommunityPostDetailScreen
         post={selectedPost}
+        posts={posts}
         token={token}
         onClose={closePostDetail}
         onToggle={toggleReaction}
         onCommentAdded={handleCommentAdded}
+        onCommentDeleted={handleCommentDeleted}
+        onToast={showToast}
         currentUserId={myId}
         showSaveAction={communityView !== 'saved'}
         toastMessage={toastMessage}
