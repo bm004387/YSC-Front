@@ -107,7 +107,7 @@ function LoginScreen({
 
     try {
       // Spring Boot 로그인 API 호출
-      const response = await login(usrId.trim(), pwd);
+      const response = await login(usrId.trim(), pwd, rememberId);
 
       // Access Token을 Keychain에 저장
       await saveAuthCredentials(

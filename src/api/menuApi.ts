@@ -3,9 +3,13 @@ const BASE_URL = 'https://ysc-dev.duckdns.org';
 export interface MenuItem {
   menuId: string;
   menuName: string;
-  iconName: string;
-  programCode: string;
-  programUrl: string;
+  upperMenuId?: string | null;
+  menuLevel?: number;
+  sortOrder?: number;
+  menuType?: string;
+  iconName?: string | null;
+  programCode?: string | null;
+  programUrl: string | null;
 }
 
 export async function getBottomMenuList(): Promise<MenuItem[]> {
@@ -13,6 +17,16 @@ export async function getBottomMenuList(): Promise<MenuItem[]> {
 
   if (!response.ok) {
     throw new Error(`메뉴 조회에 실패했습니다. (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function getAllMenuList(): Promise<MenuItem[]> {
+  const response = await fetch(`${BASE_URL}/api/menu/all`);
+
+  if (!response.ok) {
+    throw new Error(`전체 메뉴 조회에 실패했습니다. (${response.status})`);
   }
 
   return response.json();

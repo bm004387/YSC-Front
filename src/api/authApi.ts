@@ -28,6 +28,7 @@ export async function validateSession(accessToken: string): Promise<void> {
 export async function login(
   usrId: string,
   pwd: string,
+  rememberMe: boolean,
 ): Promise<LoginResponse> {
   return request<LoginResponse>(
     '/api/auth/login',
@@ -36,6 +37,7 @@ export async function login(
       body: JSON.stringify({
         usrId,
         pwd,
+        rememberMe,
       }),
     },
   );

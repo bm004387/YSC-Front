@@ -16,6 +16,7 @@ const iconGlyphs: Record<string, string> = {
   home: '⌂',
   user: '●',
   settings: '⚙',
+  community: '◎',
 };
 
 function BottomNavigation({
@@ -37,6 +38,7 @@ function BottomNavigation({
       ) : (
         items.map(item => {
           const active = item.programUrl === activeRoute;
+          const label = item.programUrl === 'settings' ? '전체메뉴' : item.menuName;
           return (
             <Pressable
               key={item.menuId}
@@ -45,10 +47,10 @@ function BottomNavigation({
               onPress={() => onSelect(item)}
               style={styles.item}>
               <Text style={[styles.icon, active && styles.activeText]}>
-                {iconGlyphs[item.iconName] ?? '•'}
+                {iconGlyphs[item.iconName ?? ''] ?? '•'}
               </Text>
               <Text style={[styles.label, active && styles.activeText]}>
-                {item.menuName}
+                {label}
               </Text>
             </Pressable>
           );

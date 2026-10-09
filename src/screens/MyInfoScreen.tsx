@@ -37,6 +37,7 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
   const {getMsg} = useMsg();
   const [profile, setProfile] = useState<UserProfile>(emptyProfile);
   const [profileImageVersion, setProfileImageVersion] = useState(() => Date.now());
+  const [profileImageLoadFailed, setProfileImageLoadFailed] = useState(false);
   const [accessToken, setAccessToken] = useState('');
   const [modalType, setModalType] = useState<ModalType>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,7 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
       setAccessToken(credentials.password);
       setProfile(await getMyProfile(credentials.password));
       setProfileImageVersion(Date.now());
+      setProfileImageLoadFailed(false);
       setPageMessage('');
     } catch (error) {
       setPageMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
@@ -206,6 +208,7 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
       });
       setProfile(current => ({...current, profileImageUrl: response.profileImageUrl}));
       setProfileImageVersion(Date.now());
+      setProfileImageLoadFailed(false);
       setPageMessage(getMsg('MYINFO', '005'));
       profileMessageTimer.current = setTimeout(() => setPageMessage(''), 3000);
     } catch (error) {
@@ -230,10 +233,11 @@ function MyInfoScreen({onBack}: MyInfoScreenProps) {
         <ScrollView contentContainerStyle={{paddingBottom: 40}}>
           <View style={myInfoStyles.content}>
             <View style={myInfoStyles.profileArea}>
-              {profile.profileImageUrl ? (
+              {profile.profileImageUrl && !profileImageLoadFailed ? (
                 <Image
                   source={{uri: `${BASE_URL}${profile.profileImageUrl}?v=${profileImageVersion}`, headers: {Authorization: `Bearer ${accessToken}`}, cache: 'reload'}}
                   style={myInfoStyles.profileImage}
+                  onError={() => setProfileImageLoadFailed(true)}
                 />
               ) : (
                 <View style={myInfoStyles.profileImage}>

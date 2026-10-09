@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,10 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import {
-  SafeAreaProvider,
-  SafeAreaView,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import styles from './src/styles/common';
 
@@ -19,15 +16,44 @@ import SignupScreen from './src/screens/SignupScreen';
 import MainScreen from './src/screens/MainScreen';
 import MyInfoScreen from './src/screens/MyInfoScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import CommunityScreen from './src/screens/CommunityScreen';
 import BottomNavigation from './src/components/common/BottomNavigation';
-import {getBottomMenuList} from './src/api/menuApi';
-import type {MenuItem} from './src/api/menuApi';
-import {validateSession} from './src/api/authApi';
-import {getAuthCredentials, getRememberedUserId} from './src/storage/tokenStorage';
+import { getBottomMenuList } from './src/api/menuApi';
+import type { MenuItem } from './src/api/menuApi';
+import { validateSession } from './src/api/authApi';
+import {
+  getAuthCredentials,
+  getRememberedUserId,
+} from './src/storage/tokenStorage';
 
-import {MsgProvider} from './src/context/MsgContext';
+import { MsgProvider } from './src/context/MsgContext';
 
-type Screen = 'loading' | 'login' | 'signup' | 'main' | 'myInfo' | 'settings';
+type AppRoute = 'main' | 'myInfo' | 'settings' | 'community';
+type Screen = 'loading' | 'login' | 'signup' | AppRoute;
+
+interface RouteScreenProps {
+  onLogout: () => void;
+  onBack: () => void;
+  onMenuSelect: (item: MenuItem) => void;
+}
+
+const routeScreens: Record<
+  AppRoute,
+  (props: RouteScreenProps) => React.ReactNode
+> = {
+  main: ({ onLogout }) => <MainScreen onLogout={onLogout} />,
+  myInfo: ({ onBack }) => <MyInfoScreen onBack={onBack} />,
+  settings: ({ onMenuSelect }) => (
+    <SettingsScreen onMenuSelect={onMenuSelect} />
+  ),
+  community: ({ onBack }) => <CommunityScreen onBack={onBack} />,
+};
+
+function isAppRoute(route: string | null): route is AppRoute {
+  return (
+    route !== null && Object.prototype.hasOwnProperty.call(routeScreens, route)
+  );
+}
 
 function App() {
   const [screen, setScreen] = useState<Screen>('loading');
@@ -48,7 +74,10 @@ function App() {
       console.error('하단 메뉴 조회 실패:', error);
       setMenuItems([]);
       setMenuError('메뉴 조회 실패.');
-      Alert.alert('메뉴 조회 실패', '서버 배포와 메뉴 초기 데이터를 확인해주세요.');
+      Alert.alert(
+        '메뉴 조회 실패',
+        '서버 배포와 메뉴 초기 데이터를 확인해주세요.',
+      );
     } finally {
       setMenuLoading(false);
     }
@@ -80,7 +109,7 @@ function App() {
   }, []);
 
   const handleMenuSelect = (item: MenuItem) => {
-    if (item.programUrl === 'main' || item.programUrl === 'myInfo' || item.programUrl === 'settings') {
+    if (isAppRoute(item.programUrl)) {
       setScreen(item.programUrl);
     }
   };
@@ -93,12 +122,11 @@ function App() {
   return (
     <SafeAreaProvider>
       <MsgProvider>
-        <SafeAreaView
-          style={styles.safeArea}
-          edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
           <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding': undefined}>
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
             {screen === 'login' && (
               <LoginScreen
                 onSignup={() => setScreen('signup')}
@@ -110,22 +138,28 @@ function App() {
             )}
 
             {screen === 'loading' && (
-              <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <ActivityIndicator size="small" />
               </View>
             )}
 
             {screen === 'signup' && (
-              <SignupScreen
-                onLogin={() => setScreen('login')}
-              />
+              <SignupScreen onLogin={() => setScreen('login')} />
             )}
 
-            {(screen === 'main' || screen === 'myInfo' || screen === 'settings') && (
-              <View style={{flex: 1}}>
-                {screen === 'main' && <MainScreen onLogout={handleLogout} />}
-                {screen === 'myInfo' && <MyInfoScreen onBack={() => setScreen('main')} />}
-                {screen === 'settings' && <SettingsScreen />}
+            {isAppRoute(screen) && (
+              <View style={{ flex: 1 }}>
+                {routeScreens[screen]({
+                  onLogout: handleLogout,
+                  onBack: () => setScreen('main'),
+                  onMenuSelect: handleMenuSelect,
+                })}
                 <BottomNavigation
                   items={menuItems}
                   activeRoute={screen}
@@ -136,7 +170,6 @@ function App() {
                 />
               </View>
             )}
-
           </KeyboardAvoidingView>
         </SafeAreaView>
       </MsgProvider>
