@@ -49,6 +49,7 @@ const myInfoStyles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+    overflow: 'hidden',
     backgroundColor: colors.gray200,
     alignItems: 'center',
     justifyContent: 'center',
@@ -68,6 +69,27 @@ const myInfoStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.gray700,
+  },
+
+  message: {
+    alignSelf: 'stretch',
+    marginTop: 4,
+    marginBottom: 8,
+    color: '#D93025',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+
+  messageSuccess: {
+    color: '#188038',
+  },
+
+  modalButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  loader: {
+    flex: 1,
   },
 
   section: {
@@ -100,6 +122,24 @@ const myInfoStyles = StyleSheet.create({
 
   infoRowLast: {
     borderBottomWidth: 0,
+  },
+
+  addressInfoRow: {
+    minHeight: 76,
+    paddingVertical: 14,
+  },
+
+  addressValues: {
+    flex: 1,
+    marginLeft: 16,
+    alignItems: 'flex-end',
+  },
+
+  addressDetailValue: {
+    marginTop: 3,
+    fontSize: 13,
+    color: colors.gray500,
+    textAlign: 'right',
   },
 
   infoLabel: {

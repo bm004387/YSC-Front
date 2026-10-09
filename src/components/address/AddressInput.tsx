@@ -44,6 +44,8 @@ const AddressInput = ({
             autoComplete="off"
             textContentType="none"
             importantForAutofill="no"
+            autoCorrect={false}
+            spellCheck={false}
           />
         </View>
       </TouchableOpacity>
@@ -60,6 +62,8 @@ const AddressInput = ({
         autoComplete="off"
         textContentType="none"
         importantForAutofill="no"
+        autoCorrect={false}
+        spellCheck={false}
       />
 
       <AddressSearchModal
