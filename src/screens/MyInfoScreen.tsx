@@ -21,12 +21,14 @@ import {
 import { getAuthCredentials } from '../storage/tokenStorage';
 import myInfoStyles from '../styles/myInfo';
 import useMsg from '../hooks/useMsg';
+import PinPad from '../components/auth/PinPad';
+import { changeMyPin } from '../api/userApi';
 
 interface MyInfoScreenProps {
   onBack: () => void;
 }
 
-type ModalType = 'password' | 'address' | null;
+type ModalType = 'password' | 'address' | 'pin' | null;
 const emptyProfile: UserProfile = {
   usrId: '',
   usrNm: '',
@@ -60,6 +62,9 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
   const [detailAddress, setDetailAddress] = useState('');
+  const [pinStep, setPinStep] = useState<'new' | 'confirm'>('new');
+  const [newPin, setNewPin] = useState('');
+  const [pinValue, setPinValue] = useState('');
   const profileMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -105,8 +110,14 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       setCurrentPasswordStatus('idle');
       setCurrentPasswordMessage('');
     } else {
-      setAddress(profile.adr);
-      setDetailAddress(profile.dtlAdr);
+      if (type === 'address') {
+        setAddress(profile.adr);
+        setDetailAddress(profile.dtlAdr);
+      } else {
+        setPinStep('new');
+        setNewPin('');
+        setPinValue('');
+      }
     }
     setModalType(type);
   };
@@ -234,6 +245,37 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       setModalMessage(
         error instanceof Error ? error.message : getMsg('MYINFO', '010'),
       );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitPinStep = async (value: string) => {
+    setPinValue(value);
+    if (value.length !== 4) return;
+    if (pinStep === 'new') {
+      setNewPin(value);
+      setPinValue('');
+      setPinStep('confirm');
+      return;
+    }
+    if (value !== newPin) {
+      setModalMessage(getMsg('COMMON', '003'));
+      setPinValue('');
+      return;
+    }
+    setSaving(true);
+    try {
+      const credentials = await getAuthCredentials();
+      if (!credentials) throw new Error(getMsg('MYINFO', '009'));
+      await changeMyPin(credentials.password, value);
+      setModalMessage(getMsg('AUTH', '007'));
+      setPinValue('');
+      setNewPin('');
+      setPinStep('new');
+    } catch (error) {
+      setModalMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
+      setPinValue('');
     } finally {
       setSaving(false);
     }
@@ -371,6 +413,13 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
                   <Text style={myInfoStyles.settingArrow}>›</Text>
                 </Pressable>
                 <Pressable
+                  style={myInfoStyles.settingRow}
+                  onPress={() => openModal('pin')}
+                >
+                  <Text style={myInfoStyles.settingTitle}>PIN 번호 변경</Text>
+                  <Text style={myInfoStyles.settingArrow}>›</Text>
+                </Pressable>
+                <Pressable
                   style={[myInfoStyles.settingRow, myInfoStyles.settingRowLast]}
                   onPress={() => openModal('address')}
                 >
@@ -382,6 +431,25 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
           </View>
         </ScrollView>
       )}
+
+      <Modal
+        visible={modalType === 'pin'}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={myInfoStyles.modalOverlay}>
+          <View style={myInfoStyles.modalContent}>
+            <Text style={myInfoStyles.modalTitle}>{pinStep === 'new' ? '새 PIN 번호 설정' : '새 PIN 번호 확인'}</Text>
+            <Text style={myInfoStyles.message}>{pinStep === 'new' ? '숫자 4자리를 입력해주세요.' : '새 PIN 번호를 한 번 더 입력해주세요.'}</Text>
+            <PinPad value={pinValue} onChange={value => {setModalMessage(''); void submitPinStep(value);}} disabled={saving} />
+            {renderMessage(modalMessage)}
+            <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}>
+              <Text style={myInfoStyles.cancelButtonText}>취소</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={modalType === 'password'}

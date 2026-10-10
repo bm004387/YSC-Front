@@ -41,6 +41,12 @@ const commonStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  loginLogo: {
+    width: 88,
+    height: 88,
+    resizeMode: 'contain',
+  },
+
   logoText: {
     color: colors.white,
     fontSize: 28,
@@ -63,42 +69,6 @@ const commonStyles = StyleSheet.create({
 
   inputGroup: {
     marginBottom: 18,
-  },
-
-  rememberIdRow: {
-    minHeight: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: -8,
-    marginBottom: 14,
-  },
-
-  rememberIdBox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1,
-    borderColor: colors.gray400,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 9,
-  },
-
-  rememberIdBoxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-
-  rememberIdCheckmark: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '700',
-    lineHeight: 17,
-  },
-
-  rememberIdLabel: {
-    fontSize: 13,
-    color: colors.gray700,
   },
 
   label: {

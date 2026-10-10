@@ -1,251 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
-import TextInput from '../components/common/NoAutofillTextInput';
-
+import React, {useEffect, useState} from 'react';
+import {Image, ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import AppInput from '../components/common/AppInput';
+import PinPad from '../components/auth/PinPad';
 import styles from '../styles/common';
-import { login } from '../api/authApi';
-import { getMsgList } from '../api/msgApi';
-import { getMsg } from '../utils/msgUtil';
-import {
-  clearRememberedUserId,
-  getRememberedUserId,
-  saveAuthCredentials,
-  saveRememberedUserId,
-} from '../storage/tokenStorage';
+import loginStyles from '../styles/login';
+import {loginWithPassword, loginWithPin} from '../api/authApi';
+import {getMsgList} from '../api/msgApi';
+import {getMsg} from '../utils/msgUtil';
+import {getAuthCredentials, getRememberedUserId, saveAuthCredentials, saveRememberedUserId} from '../storage/tokenStorage';
 
 interface LoginScreenProps {
+  authMode: 'pin' | 'password';
+  initialUsrId?: string;
   onSignup: () => void;
-  onLoginSuccess: () => void;
+  onUsePassword: () => void;
+  onLoginSuccess: (usrId: string, token: string) => void;
 }
 
-function LoginScreen({ onSignup, onLoginSuccess }: LoginScreenProps) {
-  const [usrId, setUsrId] = useState('');
-  const [pwd, setPwd] = useState('');
-  const [rememberId, setRememberId] = useState(false);
-
+/** 세션 유지 중에는 PIN 키패드를, 로그아웃 상태에서는 계정 비밀번호 폼을 표시합니다. */
+function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLoginSuccess}: LoginScreenProps) {
+  const [usrId, setUsrId] = useState(initialUsrId);
+  const [pin, setPin] = useState('');
+  const [password, setPassword] = useState('');
   const [messages, setMessages] = useState<Record<string, string>>({});
-  const [usrIdError, setUsrIdError] = useState('');
-  const [pwdError, setPwdError] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadMessages();
-    loadRememberedId();
-  }, []);
+    setUsrId(initialUsrId);
+    setPin('');
+    setPassword('');
+    setError('');
+  }, [authMode, initialUsrId]);
 
-  const loadRememberedId = async () => {
-    try {
-      const rememberedUserId = await getRememberedUserId();
-      if (rememberedUserId) {
-        setUsrId(rememberedUserId);
-        setRememberId(true);
-      }
-    } catch (error) {
-      console.error('저장된 아이디 조회 실패:', error);
-    }
-  };
+  useEffect(() => {
+    void getRememberedUserId().then(value => {
+      if (!initialUsrId && value) setUsrId(value);
+    }).catch(e => console.warn('저장된 계정 아이디 조회 실패:', e));
+    void getMsgList().then(setMessages).catch(e => console.warn('메시지 조회 실패:', e));
+  }, [initialUsrId]);
 
-  const toggleRememberId = async () => {
-    const nextValue = !rememberId;
-    setRememberId(nextValue);
-
-    try {
-      if (nextValue && usrId.trim()) {
-        await saveRememberedUserId(usrId.trim());
-      } else if (!nextValue) {
-        await clearRememberedUserId();
-      }
-    } catch (error) {
-      console.error('아이디 저장 설정 실패:', error);
-    }
-  };
-
-  /**
-   * 전체 메시지 조회
-   */
-  const loadMessages = async () => {
-    try {
-      const result = await getMsgList();
-      setMessages(result);
-    } catch (error) {
-      console.error('메시지 조회 실패:', error);
-    }
-  };
-
-  /**
-   * 로그인
-   */
-  const handleLogin = async () => {
-    let isValid = true;
-
-    setUsrIdError('');
-    setPwdError('');
-
-    // 아이디 검사
+  const submit = async () => {
+    setError('');
     if (!usrId.trim()) {
-      // 아이디를 입력해주세요
-      setUsrIdError(getMsg(messages, 'COMMON', '001'));
-      isValid = false;
+      setError(getMsg(messages, 'COMMON', '001'));
+      return;
     }
-
-    // 비밀번호 검사
-    if (!pwd.trim()) {
-      // 비밀번호를 입력해주세요
-      setPwdError(getMsg(messages, 'COMMON', '002'));
-      isValid = false;
+    if (authMode === 'pin' && !/^\d{4}$/.test(pin)) {
+      setError(getMsg(messages, 'COMMON', '008'));
+      return;
     }
-
-    // 유효성 검사 실패
-    if (!isValid) {
+    if (authMode === 'password' && !password) {
+      setError(getMsg(messages, 'COMMON', '002'));
       return;
     }
 
     try {
-      // Spring Boot 로그인 API 호출
-      const response = await login(usrId.trim(), pwd, rememberId);
-
-      // Access Token을 Keychain에 저장
+      setLoading(true);
+      const current = await getAuthCredentials();
+      const sessionToken = current && typeof current !== 'boolean' ? current.password : undefined;
+      const response = authMode === 'pin'
+        ? await loginWithPin(usrId.trim(), pin, sessionToken)
+        : await loginWithPassword(usrId.trim(), password);
       await saveAuthCredentials(response.user.usrId, response.accessToken);
-
-      if (rememberId) {
-        await saveRememberedUserId(response.user.usrId);
-      } else {
-        await clearRememberedUserId();
-      }
-
-      // console.log(response);
-
-      Alert.alert(
-        '로그인 성공',
-        getMsg(messages, 'AUTH', '003', response.user.usrNm),
-        [
-          {
-            text: '확인',
-            onPress: onLoginSuccess,
-          },
-        ],
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        setPwdError(error.message);
-      } else {
-        setPwdError(getMsg(messages, 'AUTH', '001'));
-      }
+      await saveRememberedUserId(response.user.usrId);
+      onLoginSuccess(response.user.usrId, response.accessToken);
+    } catch (e) {
+      setPin('');
+      setError(e instanceof Error ? e.message : getMsg(messages, 'AUTH', '001'));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContainer}
-      scrollEnabled={false}
-      bounces={false}
-      alwaysBounceVertical={false}
-      overScrollMode="never"
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={false} bounces={false} alwaysBounceVertical={false} overScrollMode="never">
       <View style={[styles.content, styles.loginContent]}>
-        {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>M</Text>
-          </View>
+          <Image source={require('../../assets/brand/ysc-y-transparent.png')} style={styles.loginLogo} resizeMode="contain" accessibilityLabel="YSC 로고" />
         </View>
+        <Text style={styles.title}>{authMode === 'pin' ? 'PIN으로 로그인' : '다시 만나서 반가워요'}</Text>
+        <Text style={styles.subtitle}>{authMode === 'pin' ? '설정한 숫자 4자리를 입력해주세요.' : '아이디와 비밀번호를 입력해주세요.'}</Text>
 
-        {/* Title */}
-        <Text style={styles.title}>다시 만나서 반가워요</Text>
+        {authMode === 'pin' ? (
+          <>
+            <Text style={loginStyles.account}>계정  {usrId}</Text>
+            <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={loading} />
+          </>
+        ) : (
+          <>
+            <AppInput label="아이디" placeholder="아이디를 입력해주세요" value={usrId} onChangeText={setUsrId} autoCapitalize="none" autoCorrect={false} editable={!loading} />
+          <AppInput label="비밀번호" placeholder="비밀번호를 입력해주세요" value={password} onChangeText={setPassword} secureTextEntry editable={!loading} />
+          </>
+        )}
 
-        <Text style={styles.subtitle}>
-          계정에 로그인하고 서비스를 시작해보세요.
-        </Text>
-
-        {/* 아이디 */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>아이디</Text>
-
-          <TextInput
-            style={[styles.input, usrIdError ? styles.inputError : null]}
-            placeholder="아이디를 입력해주세요"
-            placeholderTextColor="#A0A0A0"
-            value={usrId}
-            onChangeText={text => {
-              setUsrId(text);
-              if (text.trim()) {
-                setUsrIdError('');
-              }
-            }}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="off"
-            textContentType="none"
-            importantForAutofill="no"
-          />
-
-          {usrIdError ? (
-            <Text style={styles.errorText}>{usrIdError}</Text>
-          ) : null}
-        </View>
-
-        {/* 비밀번호 */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>비밀번호</Text>
-
-          <TextInput
-            style={[styles.input, pwdError ? styles.inputError : null]}
-            placeholder="비밀번호를 입력해주세요"
-            placeholderTextColor="#A0A0A0"
-            value={pwd}
-            onChangeText={text => {
-              setPwd(text);
-              if (text.trim()) {
-                setPwdError('');
-              }
-            }}
-            secureTextEntry
-            autoComplete="off"
-            textContentType="none"
-            importantForAutofill="no"
-          />
-
-          {pwdError ? <Text style={styles.errorText}>{pwdError}</Text> : null}
-        </View>
-
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: rememberId }}
-          style={styles.rememberIdRow}
-          onPress={toggleRememberId}
-        >
-          <View
-            style={[
-              styles.rememberIdBox,
-              rememberId && styles.rememberIdBoxChecked,
-            ]}
-          >
-            {rememberId && <Text style={styles.rememberIdCheckmark}>✓</Text>}
-          </View>
-          <Text style={styles.rememberIdLabel}>
-            아이디 저장 및 다음 실행 시 자동 로그인
-          </Text>
-        </Pressable>
-
-        {/* 로그인 버튼 */}
-        <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-          <Text style={styles.primaryButtonText}>로그인</Text>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TouchableOpacity style={[styles.primaryButton, loading && loginStyles.disabled]} onPress={() => void submit()} disabled={loading}>
+          <Text style={styles.primaryButtonText}>{loading ? '확인 중…' : '로그인'}</Text>
         </TouchableOpacity>
-        {/* 회원가입 */}
-        <View style={styles.bottomArea}>
-          <Text style={styles.bottomText}>아직 계정이 없으신가요?</Text>
-
-          <TouchableOpacity onPress={onSignup}>
-            <Text style={styles.linkText}>회원가입</Text>
+        {authMode === 'pin' ? (
+          <TouchableOpacity style={loginStyles.alternate} onPress={onUsePassword}>
+            <Text style={styles.bottomText}>PIN을 잊으셨나요? 아이디·비밀번호로 로그인</Text>
           </TouchableOpacity>
-        </View>
+        ) : (
+          <TouchableOpacity style={loginStyles.alternate} onPress={onSignup}>
+            <Text style={styles.bottomText}>아직 계정이 없으신가요? <Text style={styles.linkText}>회원가입</Text></Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );

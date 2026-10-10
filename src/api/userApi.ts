@@ -31,6 +31,13 @@ export async function changeMyPassword(
   });
 }
 
+export async function changeMyPin(token: string, pin: string): Promise<{message: string}> {
+  return request<{message: string}>('/api/user/me/pin', token, {
+    method: 'PUT',
+    body: JSON.stringify({pin}),
+  });
+}
+
 export async function verifyCurrentPassword(token: string, currentPassword: string) {
   return request<{valid: boolean; message: string}>(
     '/api/user/me/password/verify',

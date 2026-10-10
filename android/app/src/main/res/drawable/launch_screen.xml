@@ -1,0 +1,8 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="#F7F5F0" />
+    <item>
+        <bitmap
+            android:src="@drawable/launch_logo"
+            android:gravity="center" />
+    </item>
+</layer-list>

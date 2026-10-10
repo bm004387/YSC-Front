@@ -11,9 +11,12 @@ import useMsg from '../hooks/useMsg';
 import {checkUsrId, signup} from '../api/authApi';
 import {sendSms, verifySms} from '../api/msgApi';
 
-interface SignupScreenProps {onLogin: () => void}
+interface SignupScreenProps {
+  onLogin: () => void;
+  onSignupComplete: (usrId: string, pwd: string) => void;
+}
 
-const SignupScreen = ({onLogin}: SignupScreenProps) => {
+const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
   const {getMsg} = useMsg();
 
   /*
@@ -190,14 +193,7 @@ const SignupScreen = ({onLogin}: SignupScreenProps) => {
                   dtlAddr.trim(),
                 );
 
-        Alert.alert('알림',getMsg('SIGNUP', '003'),
-          [
-            {
-              text: '확인',
-              onPress: onLogin,
-            },
-          ],
-        );
+        onSignupComplete(usrId.trim(), pwd);
 
       } catch (e: any) {
         Alert.alert('알림', e?.message ?? getMsg('SIGNUP', '004'));
