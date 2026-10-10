@@ -329,16 +329,18 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
         quality: 0.7,
         includeExtra: true,
       });
+      const asset = result.assets?.[0];
       if (result.didCancel) return;
       if (result.errorCode) {
         throw new Error(result.errorMessage ?? getMsg('MYINFO', '006'));
       }
-      const asset = result.assets?.[0];
       const contentTypes = await getCommonCodeValues('CONT_TYP');
       if (!asset?.uri || !asset.type) {
         throw new Error(getMsg('MYINFO', '007'));
       }
-      const contentType = asset.type.toLowerCase();
+      const rawContentType = asset.type.toLowerCase().split(';')[0].trim();
+      const contentType =
+        rawContentType === 'image/jpg' ? 'image/jpeg' : rawContentType;
       if (!contentType.startsWith('image/') || !contentTypes.includes(contentType)) {
         throw new Error(getMsg('MYINFO', '007'));
       }
