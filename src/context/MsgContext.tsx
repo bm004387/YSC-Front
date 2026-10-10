@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 
 import { getMsgList } from '../api/msgApi';
+import { loadCommonCodes } from '../utils/commonCodeUtil';
 
 interface MsgContextValue {
   getMsg: (
@@ -20,6 +21,10 @@ export const MsgProvider = ({ children }: MsgProviderProps) => {
   const [messages, setMessages] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    void loadCommonCodes().catch(e => {
+      console.error('공통코드 조회 실패:', e);
+    });
+
     const loadMessages = async () => {
       try {
         const data = await getMsgList();

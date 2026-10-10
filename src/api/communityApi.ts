@@ -1,8 +1,9 @@
 import { API_BASE_URL } from '../config/environment';
+import {getCommonCodeName} from '../utils/commonCodeUtil';
 
 export interface CommunityMedia {
   filSeq: number;
-  mediaType: 'IMAGE' | 'VIDEO';
+  mediaType: string;
   contentType: string;
 }
 export interface CommunityPost {
@@ -218,7 +219,9 @@ export async function createCommunityPost(
 ) {
   const body = new FormData();
   body.append('content', content);
-  body.append('visibility', 'PUBLIC');
+  body.append('visibility', await getCommonCodeName('VIS_TYP', '001'));
+  body.append('filTyp', await getCommonCodeName('FIL_TYP', '003'));
+  body.append('filCd', await getCommonCodeName('FIL_CD', '001'));
   files.forEach((file, index) =>
     body.append('files', {
       uri: file.uri,

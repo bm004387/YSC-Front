@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config/environment';
+import { getCommonCodeName } from '../utils/commonCodeUtil';
 
 export interface UserProfile {
   usrId: string;
@@ -61,6 +62,8 @@ export async function saveMyProfileImage(
   file: NativeUploadFile,
 ): Promise<{message: string; profileImageUrl: string}> {
   const form = new FormData();
+  form.append('filTyp', await getCommonCodeName('FIL_TYP', '002'));
+  form.append('filCd', await getCommonCodeName('FIL_CD', '002'));
   form.append('file', file);
   const response = await fetch(`${API_BASE_URL}/api/user/me/profile-image`, {
     method: 'PUT',

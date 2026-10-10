@@ -1,9 +1,10 @@
 import {Platform} from 'react-native';
 import {API_BASE_URL} from '../config/environment';
+import {getCommonCodeName} from '../utils/commonCodeUtil';
 
 type PushTokenPayload = {
   token: string;
-  platform: 'IOS' | 'ANDROID';
+  platform: string;
 };
 
 async function sendPushTokenRequest(
@@ -29,9 +30,12 @@ export async function registerPushToken(
   accessToken: string,
   token: string,
 ): Promise<void> {
+  const platformCode = Platform.OS === 'ios'
+    ? ((Platform as typeof Platform & {isPad?: boolean}).isPad ? '003' : '001')
+    : '002';
   await sendPushTokenRequest(
     accessToken,
-    {token, platform: Platform.OS === 'ios' ? 'IOS' : 'ANDROID'},
+    {token, platform: await getCommonCodeName('PLATFORM', platformCode)},
     'POST',
   );
 }
@@ -40,9 +44,12 @@ export async function unregisterPushToken(
   accessToken: string,
   token: string,
 ): Promise<void> {
+  const platformCode = Platform.OS === 'ios'
+    ? ((Platform as typeof Platform & {isPad?: boolean}).isPad ? '003' : '001')
+    : '002';
   await sendPushTokenRequest(
     accessToken,
-    {token, platform: Platform.OS === 'ios' ? 'IOS' : 'ANDROID'},
+    {token, platform: await getCommonCodeName('PLATFORM', platformCode)},
     'DELETE',
   );
 }

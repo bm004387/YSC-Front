@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { getCommonCodeValues } from '../utils/commonCodeUtil';
 import AddressInput from '../components/address/AddressInput';
 import {
   changeMyAddress,
@@ -333,7 +334,12 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
         throw new Error(result.errorMessage ?? getMsg('MYINFO', '006'));
       }
       const asset = result.assets?.[0];
-      if (!asset?.uri || !asset.type?.startsWith('image/')) {
+      const contentTypes = await getCommonCodeValues('CONT_TYP');
+      if (!asset?.uri || !asset.type) {
+        throw new Error(getMsg('MYINFO', '007'));
+      }
+      const contentType = asset.type.toLowerCase();
+      if (!contentType.startsWith('image/') || !contentTypes.includes(contentType)) {
         throw new Error(getMsg('MYINFO', '007'));
       }
       setSaving(true);
@@ -342,8 +348,8 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       setAccessToken(credentials.password);
       const response = await saveMyProfileImage(credentials.password, {
         uri: asset.uri,
-        name: uploadFilename(asset.fileName, asset.originalPath, asset.type),
-        type: asset.type,
+        name: uploadFilename(asset.fileName, asset.originalPath, contentType),
+        type: contentType,
       });
       setProfile(current => ({
         ...current,

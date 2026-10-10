@@ -39,6 +39,7 @@ import CommunityFollowListScreen from './CommunityFollowListScreen';
 import styles from '../styles/community';
 
 import { API_BASE_URL } from '../config/environment';
+import {getCachedCommonCodeName} from '../utils/commonCodeUtil';
 type CommunityView =
   | 'feed'
   | 'mine'
@@ -475,7 +476,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         onPress={() => openPostDetail(item)}
         accessibilityLabel={`${item.authorName} 게시물 상세 보기`}
       >
-        {firstMedia?.mediaType === 'IMAGE' ? (
+        {firstMedia?.mediaType ===
+        (getCachedCommonCodeName('MEDIA_TYP', '001') ?? 'IMAGE') ? (
           <Image
             source={{
               uri: `${API_BASE_URL}/api/community/files/${firstMedia.filSeq}`,
@@ -487,7 +489,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         ) : (
           <View style={styles.gridEmpty}>
             <Text style={styles.gridEmptyGlyph}>
-              {firstMedia?.mediaType === 'VIDEO' ? '▶' : '▤'}
+              {firstMedia?.mediaType ===
+              (getCachedCommonCodeName('MEDIA_TYP', '002') ?? 'VIDEO') ? '▶' : '▤'}
             </Text>
           </View>
         )}

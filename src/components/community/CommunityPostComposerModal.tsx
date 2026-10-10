@@ -15,6 +15,10 @@ import { createCommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
 import TextInput from '../common/NoAutofillTextInput';
 import useMsg from '../../hooks/useMsg';
+import {
+  getCommonCodeValues,
+  isCachedCommonCodeValue,
+} from '../../utils/commonCodeUtil';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -51,9 +55,19 @@ function CommunityPostComposerModal({
       selectionLimit: remainingCount,
     });
     if (!result.didCancel && result.assets) {
+      const contentTypes = await getCommonCodeValues('CONT_TYP');
+      const expectedPrefix = mediaType === 'photo' ? 'image/' : 'video/';
+      const acceptedAssets = result.assets.filter(asset => {
+        const contentType = asset.type?.toLowerCase();
+        return (
+          !!asset.uri &&
+          !!contentType?.startsWith(expectedPrefix) &&
+          contentTypes.includes(contentType)
+        );
+      });
       setAssets(current => {
         const existingUris = new Set(current.map(asset => asset.uri));
-        const addedAssets = result.assets!.filter(
+        const addedAssets = acceptedAssets.filter(
           asset => asset.uri && !existingUris.has(asset.uri),
         );
         return [...current, ...addedAssets].slice(0, MAX_ATTACHMENTS);
@@ -172,7 +186,12 @@ function CommunityPostComposerModal({
                   contentContainerStyle={styles.previewList}
                 >
                   {assets.map((asset, index) => {
-                    const isVideo = asset.type?.startsWith('video/') ?? false;
+                    const isVideo =
+                      isCachedCommonCodeValue(
+                        'CONT_TYP',
+                        asset.type?.toLowerCase(),
+                      ) &&
+                      asset.type?.toLowerCase().startsWith('video/');
                     return (
                       <View
                         key={`${asset.uri}-${index}`}

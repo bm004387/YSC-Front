@@ -11,6 +11,7 @@ import { CommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
 
 import { API_BASE_URL } from '../../config/environment';
+import {getCachedCommonCodeName} from '../../utils/commonCodeUtil';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
@@ -103,7 +104,8 @@ function CommunityPostCard({
           >
             {mediaItems.map(media => {
               const uri = `${API_BASE_URL}/api/community/files/${media.filSeq}`;
-              const isImage = media.mediaType === 'IMAGE';
+              const isImage = media.mediaType ===
+                (getCachedCommonCodeName('MEDIA_TYP', '001') ?? 'IMAGE');
 
               return (
                 <Pressable
