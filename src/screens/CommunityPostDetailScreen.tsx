@@ -20,6 +20,7 @@ import CommunityPostCard, {
   formatCommunityCommentDate,
 } from '../components/community/CommunityPostCard';
 import styles from '../styles/community';
+import useMsg from '../hooks/useMsg';
 
 import { API_BASE_URL } from '../config/environment';
 
@@ -29,6 +30,7 @@ interface CommunityPostDetailScreenProps {
   token: string;
   onClose: () => void;
   onToggle: (post: CommunityPost, kind: 'like' | 'save') => void;
+  onAuthorPress: (userId: string) => void;
   onCommentAdded: (postSeq: number) => void;
   onCommentDeleted: (postSeq: number) => void;
   onToast: (message: string) => void;
@@ -45,6 +47,7 @@ function CommunityPostDetailScreen({
   token,
   onClose,
   onToggle,
+  onAuthorPress,
   onCommentAdded,
   onCommentDeleted,
   onToast,
@@ -54,6 +57,7 @@ function CommunityPostDetailScreen({
   toastOpacity,
   toastTranslateY,
 }: CommunityPostDetailScreenProps) {
+  const { getMsg } = useMsg();
   const [commentPreviews, setCommentPreviews] = useState<
     Record<number, CommunityCommentPreview[]>
   >({});
@@ -92,9 +96,7 @@ function CommunityPostDetailScreen({
       .catch(error => {
         if (active) {
           setPreviewError(
-            error instanceof Error
-              ? error.message
-              : '댓글 미리보기를 불러오지 못했습니다.',
+            error instanceof Error ? error.message : getMsg('COMMUNITY', '031'),
           );
         }
       })
@@ -105,7 +107,7 @@ function CommunityPostDetailScreen({
     return () => {
       active = false;
     };
-  }, [postSeqKey, previewReloadKey, token]);
+  }, [getMsg, postSeqKey, previewReloadKey, token]);
 
   const openComments = (targetPost: CommunityPost) => {
     setCommentsPost(targetPost);
@@ -132,6 +134,7 @@ function CommunityPostDetailScreen({
           onOpen={() => undefined}
           onCommentOpen={openComments}
           onToggle={onToggle}
+          onAuthorPress={onAuthorPress}
           showSaveAction={showSaveAction}
         />
         <View style={styles.commentPreviewBlock}>
@@ -216,7 +219,7 @@ function CommunityPostDetailScreen({
             keyExtractor={item => String(item.postSeq)}
             renderItem={renderPost}
             ListEmptyComponent={
-              <Text style={styles.empty}>게시물이 없습니다.</Text>
+              <Text style={styles.empty}>{getMsg('COMMUNITY', '044')}</Text>
             }
           />
           {toastMessage ? (

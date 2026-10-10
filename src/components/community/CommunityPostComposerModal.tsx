@@ -14,6 +14,7 @@ import { Asset, launchImageLibrary } from 'react-native-image-picker';
 import { createCommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
 import TextInput from '../common/NoAutofillTextInput';
+import useMsg from '../../hooks/useMsg';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -30,6 +31,7 @@ function CommunityPostComposerModal({
   onClose,
   onPublished,
 }: CommunityPostComposerModalProps) {
+  const { getMsg } = useMsg();
   const [caption, setCaption] = useState('');
   const [assets, setAssets] = useState<Asset[]>([]);
   const [posting, setPosting] = useState(false);
@@ -38,8 +40,8 @@ function CommunityPostComposerModal({
     const remainingCount = MAX_ATTACHMENTS - assets.length;
     if (remainingCount <= 0) {
       Alert.alert(
-        '첨부 파일',
-        `파일은 최대 ${MAX_ATTACHMENTS}개까지 선택할 수 있습니다.`,
+        getMsg('COMMUNITY', '017'),
+        getMsg('COMMUNITY', '018', MAX_ATTACHMENTS),
       );
       return;
     }
@@ -57,7 +59,8 @@ function CommunityPostComposerModal({
         return [...current, ...addedAssets].slice(0, MAX_ATTACHMENTS);
       });
     }
-    if (result.errorMessage) Alert.alert('파일 선택 실패', result.errorMessage);
+    if (result.errorMessage)
+      Alert.alert(getMsg('COMMUNITY', '019'), result.errorMessage);
   };
 
   const removeAsset = (removeIndex: number) => {
@@ -80,7 +83,7 @@ function CommunityPostComposerModal({
 
   const publish = async () => {
     if (!caption.trim()) {
-      Alert.alert('게시물 작성', '내용을 입력해 주세요.');
+      Alert.alert(getMsg('COMMUNITY', '020'), getMsg('COMMUNITY', '021'));
       return;
     }
     setPosting(true);
@@ -102,8 +105,8 @@ function CommunityPostComposerModal({
       await onPublished();
     } catch (e) {
       Alert.alert(
-        '게시물 등록 실패',
-        e instanceof Error ? e.message : '다시 시도해 주세요.',
+        getMsg('COMMUNITY', '022'),
+        e instanceof Error ? e.message : getMsg('COMMUNITY', '023'),
       );
     } finally {
       setPosting(false);
@@ -139,7 +142,7 @@ function CommunityPostComposerModal({
             <TextInput
               value={caption}
               onChangeText={setCaption}
-              placeholder="오늘은 어떤 이야기를 나눠볼까요?"
+              placeholder={getMsg('COMMUNITY', '049')}
               multiline
               textAlignVertical="top"
               style={styles.input}

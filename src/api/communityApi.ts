@@ -36,6 +36,20 @@ export interface CommunityProfileSummary {
   followerCount: number;
   followingCount: number;
 }
+export interface CommunityUserProfile extends CommunityProfileSummary {
+  usrId: string;
+  usrNm: string;
+  profileImageFilSeq: number | null;
+  following: boolean;
+}
+export interface CommunityUserSearchResult {
+  usrId: string;
+  usrNm: string;
+  profileImageFilSeq: number | null;
+  postCount: number;
+  following: boolean;
+}
+export type CommunityRelationType = 'followers' | 'following';
 export type CommunityFeedType =
   | 'recommended'
   | 'following'
@@ -103,6 +117,68 @@ export async function getCommunityProfileSummary(
   token: string,
 ): Promise<CommunityProfileSummary> {
   return request('/api/community/profile/summary', token);
+}
+export async function getCommunityFollowUsers(
+  token: string,
+  relationType: CommunityRelationType,
+): Promise<CommunityUserSearchResult[]> {
+  return request(
+    `/api/community/profile/follows?type=${relationType}&limit=100`,
+    token,
+  );
+}
+export async function getCommunityUserProfile(
+  token: string,
+  userId: string,
+): Promise<CommunityUserProfile> {
+  return request(
+    `/api/community/users/${encodeURIComponent(userId)}/profile`,
+    token,
+  );
+}
+export async function getCommunityUserPosts(
+  token: string,
+  userId: string,
+): Promise<CommunityPost[]> {
+  return request(
+    `/api/community/users/${encodeURIComponent(userId)}/posts`,
+    token,
+  );
+}
+export async function searchCommunityUsers(
+  token: string,
+  query: string,
+  filter: 'discover' | 'following' | 'followers',
+): Promise<CommunityUserSearchResult[]> {
+  return request(
+    `/api/community/search/users?query=${encodeURIComponent(
+      query,
+    )}&filter=${filter}&limit=50`,
+    token,
+  );
+}
+export async function searchCommunityPosts(
+  token: string,
+  query: string,
+): Promise<CommunityPost[]> {
+  return request(
+    `/api/community/search/posts?query=${encodeURIComponent(query)}&limit=50`,
+    token,
+  );
+}
+export async function setCommunityFollow(
+  token: string,
+  userId: string,
+  enabled: boolean,
+) {
+  return request(
+    `/api/community/users/${encodeURIComponent(userId)}/follow`,
+    token,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ enabled }),
+    },
+  );
 }
 export async function getSavedCommunityPosts(
   token: string,

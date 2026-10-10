@@ -1,0 +1,77 @@
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#fff' },
+  tabs: {
+    height: 48,
+    flexDirection: 'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e6e8eb',
+  },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tabText: { color: '#818894', fontSize: 13, fontWeight: '600' },
+  activeTabText: { color: '#202b3d', fontWeight: '700' },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: '45%',
+    height: 2,
+    backgroundColor: '#202b3d',
+  },
+  list: { paddingHorizontal: 16, paddingBottom: 24 },
+  emptyList: { flexGrow: 1, justifyContent: 'center', padding: 28 },
+  userRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#eceef1',
+  },
+  userIdentity: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#edf0f4',
+  },
+  avatarFallback: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#dfe6f0',
+  },
+  avatarInitial: { color: '#40536f', fontSize: 16, fontWeight: '700' },
+  userText: { flex: 1, minWidth: 0, marginLeft: 11, marginRight: 8 },
+  userName: { color: '#20242d', fontSize: 13, fontWeight: '700' },
+  userId: { color: '#858c97', fontSize: 11, marginTop: 4 },
+  followButton: {
+    minWidth: 86,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    borderRadius: 7,
+    backgroundColor: '#202b3d',
+  },
+  followingButton: { backgroundColor: '#eef0f3' },
+  followText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  followingText: { color: '#3f4650' },
+  state: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 25,
+  },
+  emptyText: { color: '#8b929d', fontSize: 13, textAlign: 'center' },
+  retryButton: { marginTop: 12, padding: 8 },
+  retryText: { color: '#355b92', fontSize: 12, fontWeight: '700' },
+});
+
+export default styles;

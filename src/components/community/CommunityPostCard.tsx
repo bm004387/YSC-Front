@@ -18,6 +18,7 @@ interface CommunityPostCardProps {
   onOpen: (post: CommunityPost) => void;
   onCommentOpen?: (post: CommunityPost) => void;
   onToggle: (post: CommunityPost, kind: 'like' | 'save') => void;
+  onAuthorPress?: (userId: string) => void;
   showSaveAction?: boolean;
 }
 
@@ -27,6 +28,7 @@ function CommunityPostCard({
   onOpen,
   onCommentOpen,
   onToggle,
+  onAuthorPress,
   showSaveAction = true,
 }: CommunityPostCardProps) {
   const mediaItems = post.media ?? [];
@@ -47,29 +49,37 @@ function CommunityPostCard({
   return (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
-        <View style={styles.avatar}>
-          {post.profileImageFilSeq ? (
-            <Image
-              source={{
-                uri: `${API_BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
-                headers: { Authorization: `Bearer ${token}` },
-              }}
-              style={styles.avatarImage}
-            />
-          ) : (
-            <Text style={styles.avatarText}>
-              {post.authorName?.slice(0, 1) || '?'}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${post.authorName || post.authorId} 프로필 보기`}
+          disabled={!onAuthorPress}
+          onPress={() => onAuthorPress?.(post.authorId)}
+          style={styles.postAuthorPressable}
+        >
+          <View style={styles.avatar}>
+            {post.profileImageFilSeq ? (
+              <Image
+                source={{
+                  uri: `${API_BASE_URL}/api/community/files/${post.profileImageFilSeq}`,
+                  headers: { Authorization: `Bearer ${token}` },
+                }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Text style={styles.avatarText}>
+                {post.authorName?.slice(0, 1) || '?'}
+              </Text>
+            )}
+          </View>
+          <View style={styles.author}>
+            <Text style={styles.authorName}>
+              {post.authorName || post.authorId}
             </Text>
-          )}
-        </View>
-        <View style={styles.author}>
-          <Text style={styles.authorName}>
-            {post.authorName || post.authorId}
-          </Text>
-          <Text style={styles.meta}>
-            @{post.authorId} · {formatDate(post.createdAt)}
-          </Text>
-        </View>
+            <Text style={styles.meta}>
+              @{post.authorId} · {formatDate(post.createdAt)}
+            </Text>
+          </View>
+        </Pressable>
         <Text style={styles.more}>···</Text>
       </View>
       <Pressable onPress={() => onOpen(post)}>

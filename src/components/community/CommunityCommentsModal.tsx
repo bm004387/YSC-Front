@@ -23,6 +23,7 @@ import {
 import { formatCommunityCommentDate } from './CommunityPostCard';
 import styles from '../../styles/community';
 import TextInput from '../common/NoAutofillTextInput';
+import useMsg from '../../hooks/useMsg';
 
 import { API_BASE_URL } from '../../config/environment';
 
@@ -100,6 +101,7 @@ function CommunityCommentsModal({
   toastOpacity,
   toastTranslateY,
 }: CommunityCommentsModalProps) {
+  const { getMsg } = useMsg();
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +144,7 @@ function CommunityCommentsModal({
           setError(
             requestError instanceof Error
               ? requestError.message
-              : '댓글을 불러오지 못했습니다.',
+              : getMsg('COMMUNITY', '011'),
           );
         }
       })
@@ -153,7 +155,7 @@ function CommunityCommentsModal({
     return () => {
       active = false;
     };
-  }, [post?.postSeq, reloadKey, token]);
+  }, [getMsg, post?.postSeq, reloadKey, token]);
 
   const submitComment = async () => {
     const content = commentInput.trim();
@@ -168,12 +170,12 @@ function CommunityCommentsModal({
       setReplyTo(null);
       setReloadKey(key => key + 1);
       onCommentAdded(post.postSeq);
-      onToast(isReply ? '답글이 등록되었습니다.' : '댓글이 등록되었습니다.');
+      onToast(getMsg('COMMON', '016'));
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : '댓글을 등록하지 못했습니다.',
+          : getMsg('COMMON', '017'),
       );
     } finally {
       setSubmitting(false);
@@ -199,13 +201,13 @@ function CommunityCommentsModal({
       );
       setEditingCommentId(null);
       setEditInput('');
-      onToast('댓글이 수정되었습니다.');
+      onToast(getMsg('COMMON', '014'));
     } catch (requestError) {
       Alert.alert(
-        '댓글 수정 실패',
+        getMsg('COMMUNITY', '013'),
         requestError instanceof Error
           ? requestError.message
-          : '다시 시도해 주세요.',
+          : getMsg('COMMON', '015'),
       );
     } finally {
       setUpdatingComment(false);
@@ -222,13 +224,13 @@ function CommunityCommentsModal({
       if (editingCommentId === comment.cmtSeq) setEditingCommentId(null);
       setReloadKey(key => key + 1);
       onCommentDeleted(post.postSeq);
-      onToast('댓글이 삭제되었습니다.');
+      onToast(getMsg('COMMON', '012'));
     } catch (requestError) {
       Alert.alert(
-        '댓글 삭제 실패',
+        getMsg('COMMUNITY', '014'),
         requestError instanceof Error
           ? requestError.message
-          : '다시 시도해 주세요.',
+          : getMsg('COMMON', '013'),
       );
     } finally {
       setDeletingCommentId(null);
@@ -236,10 +238,10 @@ function CommunityCommentsModal({
   };
 
   const confirmDeleteComment = (comment: CommunityComment) => {
-    Alert.alert('댓글 삭제', '이 댓글을 삭제하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(getMsg('COMMUNITY', '015'), getMsg('COMMON', '009'), [
+      { text: getMsg('COMMUNITY', '032'), style: 'cancel' },
       {
-        text: '삭제',
+        text: getMsg('COMMUNITY', '033'),
         style: 'destructive',
         onPress: () => void deleteComment(comment),
       },
@@ -296,7 +298,9 @@ function CommunityCommentsModal({
                 error ? (
                   <View />
                 ) : (
-                  <Text style={styles.commentsHint}>아직 댓글이 없습니다.</Text>
+                  <Text style={styles.commentsHint}>
+                    {getMsg('COMMUNITY', '034')}
+                  </Text>
                 )
               }
               renderItem={({ item: threadedComment }) => {
@@ -309,7 +313,7 @@ function CommunityCommentsModal({
                       depth > 1 && { marginLeft: Math.min(depth, 4) * 28 },
                     ]}
                   >
-                    {comment.profileImageFilSeq && !comment.deleted ? (
+                    {comment.profileImageFilSeq ? (
                       <Image
                         source={{
                           uri: `${API_BASE_URL}/api/community/files/${comment.profileImageFilSeq}`,
@@ -325,19 +329,19 @@ function CommunityCommentsModal({
                       </View>
                     )}
                     <View style={styles.commentBody}>
+                      <Text style={styles.commentAuthor}>
+                        {comment.usrNm || comment.usrId}
+                        <Text style={styles.commentDate}>
+                          {'  '}
+                          {formatCommunityCommentDate(comment.cmtDtm)}
+                        </Text>
+                      </Text>
                       {comment.deleted ? (
                         <Text style={styles.commentDeletedText}>
-                          삭제된 댓글입니다.
+                          {getMsg('COMMUNITY', '035')}
                         </Text>
                       ) : (
                         <>
-                          <Text style={styles.commentAuthor}>
-                            {comment.usrNm || comment.usrId}
-                            <Text style={styles.commentDate}>
-                              {'  '}
-                              {formatCommunityCommentDate(comment.cmtDtm)}
-                            </Text>
-                          </Text>
                           <Text style={styles.commentContent}>
                             {comment.cmtCn}
                           </Text>
@@ -441,7 +445,7 @@ function CommunityCommentsModal({
             {replyTo ? (
               <View style={styles.commentReplyNotice}>
                 <Text style={styles.commentReplyNoticeText}>
-                  {replyTo.usrNm || replyTo.usrId}님에게 답글 작성 중
+                  {getMsg('COMMUNITY', '036', replyTo.usrNm || replyTo.usrId)}
                 </Text>
                 <Pressable
                   accessibilityLabel="답글 대상 취소"
@@ -457,7 +461,9 @@ function CommunityCommentsModal({
                 value={commentInput}
                 onChangeText={setCommentInput}
                 placeholder={
-                  replyTo ? '답글을 입력하세요' : '댓글을 입력하세요'
+                  replyTo
+                    ? getMsg('COMMUNITY', '037')
+                    : getMsg('COMMUNITY', '038')
                 }
                 multiline
                 maxLength={2000}
