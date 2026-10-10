@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Image, ScrollView, Text, TouchableOpacity, View} from 'react-native';
 import AppInput from '../components/common/AppInput';
 import PinPad from '../components/auth/PinPad';
@@ -14,17 +14,19 @@ interface LoginScreenProps {
   initialUsrId?: string;
   onSignup: () => void;
   onUsePassword: () => void;
+  onRecoverAccount: () => void;
   onLoginSuccess: (usrId: string, token: string) => void;
 }
 
 /** 세션 유지 중에는 PIN 키패드를, 로그아웃 상태에서는 계정 비밀번호 폼을 표시합니다. */
-function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLoginSuccess}: LoginScreenProps) {
+function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRecoverAccount, onLoginSuccess}: LoginScreenProps) {
   const [usrId, setUsrId] = useState(initialUsrId);
   const [pin, setPin] = useState('');
   const [password, setPassword] = useState('');
   const [messages, setMessages] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const attemptedPin = useRef('');
 
   useEffect(() => {
     setUsrId(initialUsrId);
@@ -39,6 +41,12 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLo
     }).catch(e => console.warn('저장된 계정 아이디 조회 실패:', e));
     void getMsgList().then(setMessages).catch(e => console.warn('메시지 조회 실패:', e));
   }, [initialUsrId]);
+
+  useEffect(() => {
+    if (authMode !== 'pin' || pin.length !== 4 || loading || attemptedPin.current === pin) return;
+    attemptedPin.current = pin;
+    void submit();
+  }, [authMode, pin, loading]);
 
   const submit = async () => {
     setError('');
@@ -67,7 +75,12 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLo
       onLoginSuccess(response.user.usrId, response.accessToken);
     } catch (e) {
       setPin('');
-      setError(e instanceof Error ? e.message : getMsg(messages, 'AUTH', '001'));
+      attemptedPin.current = '';
+      setError(authMode === 'pin'
+        ? (e instanceof Error && e.message === getMsg(messages, 'AUTH', '006')
+            ? e.message
+            : getMsg(messages, 'AUTH', '008'))
+        : (e instanceof Error ? e.message : getMsg(messages, 'AUTH', '001')));
     } finally {
       setLoading(false);
     }
@@ -85,6 +98,7 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLo
         {authMode === 'pin' ? (
           <>
             <Text style={loginStyles.account}>계정  {usrId}</Text>
+            {error ? <Text style={loginStyles.pinError}>{error}</Text> : null}
             <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={loading} />
           </>
         ) : (
@@ -94,10 +108,12 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLo
           </>
         )}
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={[styles.primaryButton, loading && loginStyles.disabled]} onPress={() => void submit()} disabled={loading}>
-          <Text style={styles.primaryButtonText}>{loading ? '확인 중…' : '로그인'}</Text>
-        </TouchableOpacity>
+        {authMode === 'password' && error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {authMode === 'password' ? (
+          <TouchableOpacity style={[styles.primaryButton, loading && loginStyles.disabled]} onPress={() => void submit()} disabled={loading}>
+            <Text style={styles.primaryButtonText}>{loading ? '확인 중…' : '로그인'}</Text>
+          </TouchableOpacity>
+        ) : null}
         {authMode === 'pin' ? (
           <TouchableOpacity style={loginStyles.alternate} onPress={onUsePassword}>
             <Text style={styles.bottomText}>PIN을 잊으셨나요? 아이디·비밀번호로 로그인</Text>
@@ -107,6 +123,11 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onLo
             <Text style={styles.bottomText}>아직 계정이 없으신가요? <Text style={styles.linkText}>회원가입</Text></Text>
           </TouchableOpacity>
         )}
+        {authMode === 'password' ? (
+          <TouchableOpacity style={loginStyles.recoveryLink} onPress={onRecoverAccount}>
+            <Text style={loginStyles.recoveryText}>아이디·비밀번호 찾기</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </ScrollView>
   );

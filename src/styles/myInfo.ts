@@ -244,6 +244,22 @@ const myInfoStyles = StyleSheet.create({
     color: colors.gray500,
   },
 
+  toast: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 34,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: 'rgba(32, 36, 45, 0.92)',
+    zIndex: 10,
+    elevation: 6,
+  },
+
+  toastText: {color: '#fff', fontSize: 13, fontWeight: '600'},
+
 });
 
 export default myInfoStyles;

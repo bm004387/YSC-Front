@@ -173,6 +173,7 @@ async function request<T>(
   if (!response.ok) {
     throw new Error(
       data.message ??
+        data.detail ??
         `요청에 실패했습니다. (${response.status})`,
     );
   }

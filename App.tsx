@@ -12,6 +12,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import styles from './src/styles/common';
 
 import LoginScreen from './src/screens/LoginScreen';
+import AccountRecoveryScreen from './src/screens/AccountRecoveryScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import PinSetupScreen from './src/screens/PinSetupScreen';
 import MainScreen from './src/screens/MainScreen';
@@ -36,7 +37,7 @@ import { getRememberedUserId } from './src/storage/tokenStorage';
 import { MsgProvider } from './src/context/MsgContext';
 
 type AppRoute = 'main' | 'myInfo' | 'settings' | 'community';
-type Screen = 'loading' | 'locked' | 'login' | 'signup' | 'pinSetup' | 'pinConfirm' | AppRoute;
+type Screen = 'loading' | 'locked' | 'login' | 'signup' | 'recovery' | 'pinSetup' | 'pinConfirm' | AppRoute;
 
 interface RouteScreenProps {
   onLogout: () => void;
@@ -251,6 +252,7 @@ function App() {
                 initialUsrId={savedUsrId}
                 onSignup={() => setScreen('signup')}
                 onUsePassword={() => setAuthMode('password')}
+                onRecoverAccount={() => setScreen('recovery')}
                 onLoginSuccess={usrId => {
                   setSavedUsrId(usrId);
                   handleLoginSuccess();
@@ -267,6 +269,10 @@ function App() {
                   setScreen('pinSetup');
                 }}
               />
+            )}
+
+            {screen === 'recovery' && (
+              <AccountRecoveryScreen onBack={() => setScreen('login')} />
             )}
 
             {(screen === 'pinSetup' || screen === 'pinConfirm') && pinSetupCredentials && (

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   ActivityIndicator,
   Image,
   Modal,
@@ -65,6 +66,10 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
   const [pinStep, setPinStep] = useState<'new' | 'confirm'>('new');
   const [newPin, setNewPin] = useState('');
   const [pinValue, setPinValue] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastTranslateY = useRef(new Animated.Value(8)).current;
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -74,9 +79,34 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
     () => () => {
       if (profileMessageTimer.current)
         clearTimeout(profileMessageTimer.current);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      toastOpacity.stopAnimation();
+      toastTranslateY.stopAnimation();
     },
-    [],
+    [toastOpacity, toastTranslateY],
   );
+
+  const showToast = (message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastOpacity.stopAnimation();
+    toastTranslateY.stopAnimation();
+    toastOpacity.setValue(0);
+    toastTranslateY.setValue(8);
+    setToastMessage(message);
+    Animated.parallel([
+      Animated.timing(toastOpacity, {toValue: 1, duration: 220, useNativeDriver: true}),
+      Animated.timing(toastTranslateY, {toValue: 0, duration: 220, useNativeDriver: true}),
+    ]).start();
+    toastTimer.current = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(toastOpacity, {toValue: 0, duration: 250, useNativeDriver: true}),
+        Animated.timing(toastTranslateY, {toValue: 8, duration: 250, useNativeDriver: true}),
+      ]).start(({finished}) => {
+        if (finished) setToastMessage('');
+        toastTimer.current = null;
+      });
+    }, 1750);
+  };
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -194,12 +224,15 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
         setCurrentPasswordMessage(result.message);
         return;
       }
-      setModalMessage(getMsg('MYINFO', '003'));
+      const successMessage = getMsg('MYINFO', '003');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setCurrentPasswordStatus('idle');
       setCurrentPasswordMessage('');
+      setModalMessage('');
+      setModalType(null);
+      showToast(successMessage);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : getMsg('MYINFO', '008');
@@ -269,10 +302,12 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       const credentials = await getAuthCredentials();
       if (!credentials) throw new Error(getMsg('MYINFO', '009'));
       await changeMyPin(credentials.password, value);
-      setModalMessage(getMsg('AUTH', '007'));
+      setModalMessage('');
+      setModalType(null);
       setPinValue('');
       setNewPin('');
       setPinStep('new');
+      showToast(getMsg('AUTH', '007'));
     } catch (error) {
       setModalMessage(error instanceof Error ? error.message : getMsg('MYINFO', '010'));
       setPinValue('');
@@ -516,6 +551,11 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
               autoCorrect={false}
               spellCheck={false}
             />
+            {newPassword && confirmPassword && newPassword !== confirmPassword ? (
+              <Text style={myInfoStyles.message}>
+                {getMsg('COMMON', '003')}
+              </Text>
+            ) : null}
             {renderMessage(modalMessage)}
             <Pressable
               style={[
@@ -568,6 +608,17 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
           </View>
         </View>
       </Modal>
+      {toastMessage ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            myInfoStyles.toast,
+            {opacity: toastOpacity, transform: [{translateY: toastTranslateY}]},
+          ]}
+        >
+          <Text style={myInfoStyles.toastText}>{toastMessage}</Text>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
