@@ -30,7 +30,7 @@ export default function usePushNotifications(enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
     if (getApps().length === 0) {
-      console.error(
+      console.warn(
         '[Push] Firebase가 초기화되지 않았습니다. iOS target에 GoogleService-Info.plist를 추가해야 토큰을 등록할 수 있습니다.',
       );
       return;
@@ -84,7 +84,14 @@ export default function usePushNotifications(enabled: boolean): void {
     });
 
     void initializePush().catch(error => {
-      console.warn('푸시 알림 초기화 실패:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('aps-environment')) {
+        console.warn(
+          '[Push] APNs 등록을 건너뜁니다. Xcode YSC 타깃에 Push Notifications capability와 aps-environment가 포함된 provisioning profile이 필요합니다.',
+        );
+        return;
+      }
+      console.warn(`[Push] 푸시 알림 초기화 실패: ${errorMessage}`);
     });
 
     return () => {
