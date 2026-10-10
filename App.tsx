@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
+import {getMessaging, getToken} from '@react-native-firebase/messaging';
 import {
   Alert,
   AppState,
@@ -33,6 +34,8 @@ import {
   saveBackgroundTimestamp,
 } from './src/storage/tokenStorage';
 import { getRememberedUserId } from './src/storage/tokenStorage';
+import { unregisterPushToken } from './src/api/pushApi';
+import usePushNotifications from './src/hooks/usePushNotifications';
 
 import { MsgProvider } from './src/context/MsgContext';
 
@@ -79,6 +82,8 @@ function App() {
   const backgroundSaveRef = useRef<Promise<unknown> | null>(null);
   const protectedScreenRef = useRef<AppRoute>('main');
   const initialisedRef = useRef(false);
+
+  usePushNotifications(isAppRoute(screen));
 
   React.useLayoutEffect(() => {
     screenRef.current = screen;
@@ -199,6 +204,12 @@ function App() {
     void (async () => {
       const credentials = await getAuthCredentials();
       if (credentials) {
+        try {
+          const pushToken = await getToken(getMessaging());
+          await unregisterPushToken(credentials.password, pushToken);
+        } catch (error) {
+          console.warn('푸시 토큰 해제 실패:', error);
+        }
         await logout(credentials.password).catch(error => {
           console.warn('서버 세션 종료 실패:', error);
         });
