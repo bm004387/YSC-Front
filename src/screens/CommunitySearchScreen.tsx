@@ -12,6 +12,7 @@ import CommunityPostCard from '../components/community/CommunityPostCard';
 import {
   CommunityPost,
   CommunityUserSearchResult,
+  getCommunityFollowUsers,
   searchCommunityPosts,
   searchCommunityUsers,
 } from '../api/communityApi';
@@ -64,7 +65,7 @@ function CommunitySearchScreen({
   useEffect(() => {
     let active = true;
     const keyword = query.trim();
-    if (!keyword) {
+    if (!keyword && (tab !== 'users' || userFilter === 'discover')) {
       setSearchPosts([]);
       setUsers([]);
       setSearchError('');
@@ -78,6 +79,29 @@ function CommunitySearchScreen({
     setSearchError('');
     if (tab === 'posts') setSearchPosts([]);
     else setUsers([]);
+    if (!keyword && tab === 'users' && userFilter !== 'discover') {
+      getCommunityFollowUsers(token, userFilter)
+        .then(result => {
+          if (active) setUsers(result);
+        })
+        .catch(error => {
+          if (active) {
+            setSearchError(
+              error instanceof Error
+                ? error.message
+                : getMsg('COMMUNITY', '030'),
+            );
+          }
+        })
+        .finally(() => {
+          if (active) setSearchLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+
     const timer = setTimeout(() => {
       const request =
         tab === 'posts'

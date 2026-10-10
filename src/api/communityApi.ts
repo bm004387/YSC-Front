@@ -127,6 +127,16 @@ export async function getCommunityFollowUsers(
     token,
   );
 }
+export async function removeCommunityFollower(
+  token: string,
+  userId: string,
+): Promise<{ success: boolean }> {
+  return request(
+    `/api/community/profile/followers/${encodeURIComponent(userId)}`,
+    token,
+    { method: 'DELETE' },
+  );
+}
 export async function getCommunityUserProfile(
   token: string,
   userId: string,

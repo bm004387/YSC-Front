@@ -26,6 +26,7 @@ import {
   getMyCommunityPosts,
   getCommunityProfileSummary,
   getSavedCommunityPosts,
+  removeCommunityFollower,
   markCommunityPostSeen,
   setCommunityReaction,
   setCommunityFollow,
@@ -326,6 +327,19 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
 
   const toggleSearchFollow = (userId: string, currentlyFollowing: boolean) => {
     return toggleFollow(userId, currentlyFollowing);
+  };
+
+  const removeFollower = async (userId: string): Promise<boolean> => {
+    try {
+      await removeCommunityFollower(token, userId);
+      return true;
+    } catch (e) {
+      Alert.alert(
+        getMsg('COMMUNITY', '005'),
+        e instanceof Error ? e.message : getMsg('COMMUNITY', '023'),
+      );
+      return false;
+    }
   };
 
   const showFeed = () => {
@@ -718,6 +732,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           onRelationTypeChange={setFollowPageType}
           onUserSelect={openAuthorProfile}
           onToggleFollow={toggleFollow}
+          onRemoveFollower={removeFollower}
           onRelationChanged={() => void loadProfileSummary(token)}
         />
       ) : communityView === 'search' ? (

@@ -27,6 +27,7 @@ interface CommunityFollowListScreenProps {
     userId: string,
     currentlyFollowing: boolean,
   ) => Promise<boolean>;
+  onRemoveFollower: (userId: string) => Promise<boolean>;
   onRelationChanged: () => void;
 }
 
@@ -38,6 +39,7 @@ function CommunityFollowListScreen({
   onRelationTypeChange,
   onUserSelect,
   onToggleFollow,
+  onRemoveFollower,
   onRelationChanged,
 }: CommunityFollowListScreenProps) {
   const { getMsg } = useMsg();
@@ -116,25 +118,66 @@ function CommunityFollowListScreen({
           </Text>
         </View>
       </Pressable>
-      <Pressable
-        accessibilityLabel={
-          item.following
-            ? `${item.usrNm} 팔로우 취소`
-            : `${item.usrNm} 맞팔로우`
-        }
-        onPress={() => void toggleFollow(item)}
-        style={[styles.followButton, item.following && styles.followingButton]}
-      >
-        <Text
-          style={[styles.followText, item.following && styles.followingText]}
+      {relationType === 'followers' ? (
+        <View style={styles.followerActions}>
+          {item.following ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '050')}`}
+              disabled
+              style={[styles.followButton, styles.messageButton]}
+            >
+              <Text style={[styles.followText, styles.messageButtonText]}>
+                {getMsg('COMMUNITY', '050')}
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '052')}`}
+              onPress={() => void toggleFollow(item)}
+              style={styles.followButton}
+            >
+              <Text style={styles.followText}>
+                {getMsg('COMMUNITY', '052')}
+              </Text>
+            </Pressable>
+          )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '051')}`}
+            hitSlop={8}
+            onPress={async () => {
+              const removed = await onRemoveFollower(item.usrId);
+              if (removed) {
+                setUsers(current =>
+                  current.filter(user => user.usrId !== item.usrId),
+                );
+                onRelationChanged();
+              }
+            }}
+            style={styles.removeFollowerButton}
+          >
+            <Text style={styles.removeFollowerText}>×</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityLabel={
+            item.following
+              ? `${item.usrNm} 팔로우 취소`
+              : `${item.usrNm} 팔로우`
+          }
+          onPress={() => void toggleFollow(item)}
+          style={[styles.followButton, item.following && styles.followingButton]}
         >
-          {item.following
-            ? '팔로잉'
-            : relationType === 'followers'
-            ? '맞팔로우'
-            : '팔로우'}
-        </Text>
-      </Pressable>
+          <Text
+            style={[styles.followText, item.following && styles.followingText]}
+          >
+            {item.following ? '팔로잉' : '팔로우'}
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 

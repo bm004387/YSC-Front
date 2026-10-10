@@ -63,6 +63,18 @@ const styles = StyleSheet.create({
   followingButton: { backgroundColor: '#eef0f3' },
   followText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   followingText: { color: '#3f4650' },
+  followerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  messageButton: { minWidth: 108, backgroundColor: '#eef0f3' },
+  messageButtonText: { color: '#767d87' },
+  removeFollowerButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: '#f2f3f5',
+  },
+  removeFollowerText: { color: '#59616d', fontSize: 23, lineHeight: 25 },
   state: {
     flex: 1,
     alignItems: 'center',
