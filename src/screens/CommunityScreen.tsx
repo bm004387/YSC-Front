@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import CommunityPostComposerModal from '../components/community/CommunityPostComposerModal';
 import CommunityPostCard from '../components/community/CommunityPostCard';
+import CommunityVideoThumbnail from '../components/community/CommunityVideoThumbnail';
 import {
   CommunityPost,
   CommunityProfileSummary,
@@ -39,9 +40,9 @@ import CommunityFollowListScreen from './CommunityFollowListScreen';
 import styles from '../styles/community';
 
 import { API_BASE_URL } from '../config/environment';
-import {getCachedCommonCodeName} from '../utils/commonCodeUtil';
-import {getAvatarColor} from '../utils/avatarColor';
-import {showLocalMessageNotification} from '../utils/localNotificationUtil';
+import { getCachedCommonCodeName } from '../utils/commonCodeUtil';
+import { getAvatarColor } from '../utils/avatarColor';
+import { showLocalMessageNotification } from '../utils/localNotificationUtil';
 type CommunityView =
   | 'feed'
   | 'mine'
@@ -75,6 +76,9 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
   const [followPageType, setFollowPageType] =
     useState<CommunityRelationType>('followers');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [visibleVideoPostIds, setVisibleVideoPostIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [composerVisible, setComposerVisible] = useState(false);
@@ -152,7 +156,10 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      console.warn('[Community/LocalNotification] 테스트 알림 표시 실패:', detail);
+      console.warn(
+        '[Community/LocalNotification] 테스트 알림 표시 실패:',
+        detail,
+      );
       showToast(detail);
     }
   };
@@ -195,7 +202,9 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
       try {
         const [summary, profile] = await Promise.all([
           getCommunityProfileSummary(authToken),
-          myId ? getCommunityUserProfile(authToken, myId) : Promise.resolve(null),
+          myId
+            ? getCommunityUserProfile(authToken, myId)
+            : Promise.resolve(null),
         ]);
         setProfileSummary(summary);
         if (profile) {
@@ -377,6 +386,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
 
   const showFeed = () => {
     setCommunityView('feed');
+    setVisibleVideoPostIds(new Set());
     seenIds.current.clear();
     void loadFeed(token);
   };
@@ -402,6 +412,52 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
       });
     },
   ).current;
+  const onVideoViewableItemsChanged = useRef(
+    ({
+      viewableItems,
+    }: {
+      viewableItems: Array<{ item: CommunityPost; isViewable: boolean }>;
+    }) => {
+      const visibleIds = new Set(
+        viewableItems
+          .filter(
+            ({ isViewable, item }) =>
+              isViewable &&
+              item.media?.some(
+                media =>
+                  media.mediaType ===
+                  (getCachedCommonCodeName('MEDIA_TYP', '002') ?? 'VIDEO'),
+              ),
+          )
+          .map(({ item }) => item.postSeq),
+      );
+      setVisibleVideoPostIds(current => {
+        if (
+          current.size === visibleIds.size &&
+          [...current].every(postSeq => visibleIds.has(postSeq))
+        ) {
+          return current;
+        }
+        return visibleIds;
+      });
+    },
+  ).current;
+  const feedViewabilityPairs = useRef([
+    {
+      viewabilityConfig: {
+        itemVisiblePercentThreshold: 55,
+        minimumViewTime: 800,
+      },
+      onViewableItemsChanged,
+    },
+    {
+      viewabilityConfig: {
+        itemVisiblePercentThreshold: 30,
+        minimumViewTime: 0,
+      },
+      onViewableItemsChanged: onVideoViewableItemsChanged,
+    },
+  ]).current;
 
   const updatePost = (
     postSeq: number,
@@ -483,7 +539,13 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     avatarStyle: StyleProp<ViewStyle>,
     textStyle: StyleProp<TextStyle>,
   ) => (
-    <View style={[styles.avatar, avatarStyle, {backgroundColor: getAvatarColor(post.authorId)}]}>
+    <View
+      style={[
+        styles.avatar,
+        avatarStyle,
+        { backgroundColor: getAvatarColor(post.authorId) },
+      ]}
+    >
       {post.profileImageFilSeq ? (
         <Image
           source={{
@@ -518,12 +580,15 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
             style={styles.gridImage}
             resizeMode="cover"
           />
+        ) : firstMedia?.mediaType ===
+          (getCachedCommonCodeName('MEDIA_TYP', '002') ?? 'VIDEO') ? (
+          <CommunityVideoThumbnail
+            uri={`${API_BASE_URL}/api/community/files/${firstMedia.filSeq}`}
+            token={token}
+          />
         ) : (
           <View style={styles.gridEmpty}>
-            <Text style={styles.gridEmptyGlyph}>
-              {firstMedia?.mediaType ===
-              (getCachedCommonCodeName('MEDIA_TYP', '002') ?? 'VIDEO') ? '▶' : '▤'}
-            </Text>
+            <Text style={styles.gridEmptyGlyph}>▤</Text>
           </View>
         )}
         {item.media?.length > 1 && (
@@ -682,7 +747,13 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
               style={[styles.avatar, styles.myAvatar, styles.avatarImage]}
             />
           ) : communityView === 'profile' ? (
-            <View style={[styles.avatar, styles.myAvatar, {backgroundColor: getAvatarColor(profileUser?.usrId)}]}>
+            <View
+              style={[
+                styles.avatar,
+                styles.myAvatar,
+                { backgroundColor: getAvatarColor(profileUser?.usrId) },
+              ]}
+            >
               <Text style={styles.avatarText}>
                 {profileUser?.usrNm.slice(0, 1) || '?'}
               </Text>
@@ -690,7 +761,13 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           ) : posts[0] ? (
             renderAvatar(posts[0], styles.myAvatar, styles.myAvatarText)
           ) : (
-            <View style={[styles.avatar, styles.myAvatar, {backgroundColor: getAvatarColor(myId)}]}>
+            <View
+              style={[
+                styles.avatar,
+                styles.myAvatar,
+                { backgroundColor: getAvatarColor(myId) },
+              ]}
+            >
               <Text style={styles.avatarText}>
                 {myId.slice(0, 1).toUpperCase() || '나'}
               </Text>
@@ -847,20 +924,21 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
                   <CommunityPostCard
                     post={item}
                     token={token}
+                    autoPlay={
+                      !selectedPost &&
+                      !composerVisible &&
+                      visibleVideoPostIds.has(item.postSeq)
+                    }
                     onOpen={openPostDetail}
                     onAuthorPress={openAuthorProfile}
                     onToggle={(post, kind) => void toggleReaction(post, kind)}
-                    showSaveAction={communityView !== 'saved'}
+                    showSaveAction
                   />
                 )
           }
           onRefresh={refresh}
           refreshing={loading}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{
-            itemVisiblePercentThreshold: 55,
-            minimumViewTime: 800,
-          }}
+          viewabilityConfigCallbackPairs={feedViewabilityPairs}
           ListEmptyComponent={
             <Text style={styles.empty}>
               {communityView === 'mine'

@@ -24,7 +24,8 @@ import styles from '../styles/community';
 import useMsg from '../hooks/useMsg';
 
 import { API_BASE_URL } from '../config/environment';
-import {getAvatarColor} from '../utils/avatarColor';
+import { getAvatarColor } from '../utils/avatarColor';
+import { getCachedCommonCodeName } from '../utils/commonCodeUtil';
 
 interface CommunityPostDetailScreenProps {
   post: CommunityPost | null;
@@ -71,7 +72,49 @@ function CommunityPostDetailScreen({
   const [commentsPost, setCommentsPost] = useState<CommunityPost | null>(null);
   const [detailListHeight, setDetailListHeight] = useState(0);
   const [lastPostHeight, setLastPostHeight] = useState(0);
+  const [visibleVideoPostIds, setVisibleVideoPostIds] = useState<Set<number>>(
+    new Set(),
+  );
   const detailListRef = useRef<FlatList<CommunityPost>>(null);
+  const onVideoViewableItemsChanged = useRef(
+    ({
+      viewableItems,
+    }: {
+      viewableItems: Array<{ item: CommunityPost; isViewable: boolean }>;
+    }) => {
+      const visibleIds = new Set(
+        viewableItems
+          .filter(
+            ({ isViewable, item }) =>
+              isViewable &&
+              item.media?.some(
+                media =>
+                  media.mediaType ===
+                  (getCachedCommonCodeName('MEDIA_TYP', '002') ?? 'VIDEO'),
+              ),
+          )
+          .map(({ item }) => item.postSeq),
+      );
+      setVisibleVideoPostIds(current => {
+        if (
+          current.size === visibleIds.size &&
+          [...current].every(postSeq => visibleIds.has(postSeq))
+        ) {
+          return current;
+        }
+        return visibleIds;
+      });
+    },
+  ).current;
+  const detailViewabilityPairs = useRef([
+    {
+      viewabilityConfig: {
+        itemVisiblePercentThreshold: 30,
+        minimumViewTime: 0,
+      },
+      onViewableItemsChanged: onVideoViewableItemsChanged,
+    },
+  ]).current;
   const detailPosts = post
     ? singlePostOnly
       ? [post]
@@ -187,6 +230,7 @@ function CommunityPostDetailScreen({
         <CommunityPostCard
           post={item}
           token={token}
+          autoPlay={visibleVideoPostIds.has(item.postSeq)}
           onOpen={() => undefined}
           onCommentOpen={openComments}
           onToggle={onToggle}
@@ -210,7 +254,12 @@ function CommunityPostDetailScreen({
                     style={styles.commentPreviewAvatar}
                   />
                 ) : (
-                  <View style={[styles.commentPreviewFallback, {backgroundColor: getAvatarColor(comment.usrId)}]}>
+                  <View
+                    style={[
+                      styles.commentPreviewFallback,
+                      { backgroundColor: getAvatarColor(comment.usrId) },
+                    ]}
+                  >
                     <Text style={styles.commentPreviewFallbackText}>
                       {comment.usrNm?.slice(0, 1) || '?'}
                     </Text>
@@ -221,7 +270,9 @@ function CommunityPostDetailScreen({
                 <View style={styles.commentPreviewAuthorRow}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`${comment.usrNm || '사용자'} 프로필 보기`}
+                    accessibilityLabel={`${
+                      comment.usrNm || '사용자'
+                    } 프로필 보기`}
                     onPress={() => onAuthorPress(comment.usrId)}
                   >
                     <Text style={styles.commentPreviewAuthor}>
@@ -292,11 +343,10 @@ function CommunityPostDetailScreen({
             }
             keyboardShouldPersistTaps="handled"
             data={detailPosts}
+            viewabilityConfigCallbackPairs={detailViewabilityPairs}
             keyExtractor={item => String(item.postSeq)}
             renderItem={renderPost}
-            ListFooterComponent={
-              <View style={{ height: footerHeight }} />
-            }
+            ListFooterComponent={<View style={{ height: footerHeight }} />}
             onScrollToIndexFailed={({ index, averageItemLength }) => {
               detailListRef.current?.scrollToOffset({
                 offset: averageItemLength * index,

@@ -13,6 +13,7 @@ import styles from '../../styles/community';
 import { API_BASE_URL } from '../../config/environment';
 import {getCachedCommonCodeName} from '../../utils/commonCodeUtil';
 import {getAvatarColor} from '../../utils/avatarColor';
+import CommunityVideoPlayer from './CommunityVideoPlayer';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
@@ -22,6 +23,7 @@ interface CommunityPostCardProps {
   onToggle: (post: CommunityPost, kind: 'like' | 'save') => void;
   onAuthorPress?: (userId: string) => void;
   showSaveAction?: boolean;
+  autoPlay?: boolean;
 }
 
 function CommunityPostCard({
@@ -32,6 +34,7 @@ function CommunityPostCard({
   onToggle,
   onAuthorPress,
   showSaveAction = true,
+  autoPlay = false,
 }: CommunityPostCardProps) {
   const mediaItems = post.media ?? [];
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
@@ -100,25 +103,35 @@ function CommunityPostCard({
               updateActiveMediaIndex(event.nativeEvent.contentOffset.x);
             }}
           >
-            {mediaItems.map(media => {
+            {mediaItems.map((media, index) => {
               const uri = `${API_BASE_URL}/api/community/files/${media.filSeq}`;
               const isImage = media.mediaType ===
                 (getCachedCommonCodeName('MEDIA_TYP', '001') ?? 'IMAGE');
 
               return (
-                <Pressable
+                <View
                   key={media.filSeq}
                   style={styles.mediaFrame}
-                  onPress={() => onOpen(post)}
                 >
                   {isImage ? (
-                    <Image
-                      source={{
-                        uri,
-                        headers: { Authorization: `Bearer ${token}` },
-                      }}
-                      style={styles.image}
-                      resizeMode="cover"
+                    <Pressable
+                      style={styles.mediaFrameContent}
+                      onPress={() => onOpen(post)}
+                    >
+                      <Image
+                        source={{
+                          uri,
+                          headers: { Authorization: `Bearer ${token}` },
+                        }}
+                        style={styles.image}
+                        resizeMode="cover"
+                      />
+                    </Pressable>
+                  ) : autoPlay && index === activeMediaIndex ? (
+                    <CommunityVideoPlayer
+                      uri={uri}
+                      token={token}
+                      autoPlay
                     />
                   ) : (
                     <View style={styles.videoPreview}>
@@ -126,12 +139,7 @@ function CommunityPostCard({
                       <Text style={styles.videoPreviewText}>동영상</Text>
                     </View>
                   )}
-                  {!isImage && (
-                    <View style={styles.videoBadge}>
-                      <Text style={styles.videoText}>▶ 동영상</Text>
-                    </View>
-                  )}
-                </Pressable>
+                </View>
               );
             })}
           </ScrollView>
