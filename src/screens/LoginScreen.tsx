@@ -92,8 +92,22 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
         <View style={styles.logoContainer}>
           <Image source={require('../../assets/brand/ysc-y-transparent.png')} style={styles.loginLogo} resizeMode="contain" accessibilityLabel="YSC 로고" />
         </View>
-        <Text style={styles.title}>{authMode === 'pin' ? 'PIN으로 로그인' : '다시 만나서 반가워요'}</Text>
-        <Text style={styles.subtitle}>{authMode === 'pin' ? '설정한 숫자 4자리를 입력해주세요.' : '아이디와 비밀번호를 입력해주세요.'}</Text>
+        <Text
+          style={[
+            styles.title,
+            authMode === 'pin' && loginStyles.pinTitle,
+          ]}>
+          {authMode === 'pin' ? 'PIN으로 로그인' : '다시 만나서 반가워요'}
+        </Text>
+        <Text
+          style={[
+            styles.subtitle,
+            authMode === 'pin' && loginStyles.pinSubtitle,
+          ]}>
+          {authMode === 'pin'
+            ? '설정한 숫자 4자리를 입력해주세요.'
+            : '아이디와 비밀번호를 입력해주세요.'}
+        </Text>
 
         {authMode === 'pin' ? (
           <>

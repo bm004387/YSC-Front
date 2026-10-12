@@ -41,6 +41,7 @@ import { MsgProvider } from './src/context/MsgContext';
 
 type AppRoute = 'main' | 'myInfo' | 'settings' | 'community';
 type Screen = 'loading' | 'locked' | 'login' | 'signup' | 'recovery' | 'pinSetup' | 'pinConfirm' | AppRoute;
+const SESSION_RESUME_GRACE_MS = 3_000;
 
 interface RouteScreenProps {
   onLogout: () => void;
@@ -82,6 +83,11 @@ function App() {
   const backgroundSaveRef = useRef<Promise<unknown> | null>(null);
   const protectedScreenRef = useRef<AppRoute>('main');
   const initialisedRef = useRef(false);
+  const routeToRender: AppRoute | null = isAppRoute(screen)
+    ? screen
+    : screen === 'locked'
+    ? protectedScreenRef.current
+    : null;
 
   usePushNotifications(isAppRoute(screen));
 
@@ -112,8 +118,8 @@ function App() {
   };
 
   React.useEffect(() => {
-    let previousAppState = AppState.currentState;
     let disposed = false;
+    let previousAppState = AppState.currentState;
     const restoreOnLaunch = async () => {
       try {
         const [credentials, rememberedId, backgroundAt] = await Promise.all([
@@ -128,7 +134,7 @@ function App() {
         }
         setSavedUsrId(credentials.username);
           const launchElapsed = backgroundAt === null ? Infinity : Date.now() - backgroundAt;
-          if (launchElapsed >= 0 && launchElapsed < 10_000) {
+          if (launchElapsed >= 0 && launchElapsed < SESSION_RESUME_GRACE_MS) {
           try {
             await validateSession(credentials.password);
             if (disposed) return;
@@ -154,9 +160,17 @@ function App() {
     void restoreOnLaunch();
 
     const appStateSubscription = AppState.addEventListener('change', nextAppState => {
-      const leaving = nextAppState === 'background' || nextAppState === 'inactive';
-      const returning = (previousAppState === 'background' || previousAppState === 'inactive') && nextAppState === 'active';
+      // iOS reports `inactive` while Notification Center or Control Center is open.
+      // Keep the current route mounted during that temporary system UI transition.
+      const previousState = previousAppState;
+      const wasInactive = previousState === 'inactive';
       previousAppState = nextAppState;
+      if (nextAppState === 'inactive') return;
+
+      const leaving =
+        nextAppState === 'background' &&
+        (Platform.OS !== 'ios' || wasInactive);
+      const returning = nextAppState === 'active' && screenRef.current === 'locked';
 
       if (leaving && isAppRoute(screenRef.current)) {
         protectedScreenRef.current = screenRef.current;
@@ -173,7 +187,7 @@ function App() {
             return;
           }
           setSavedUsrId(credentials.username);
-          if (elapsed >= 0 && elapsed < 10_000) {
+          if (elapsed >= 0 && elapsed < SESSION_RESUME_GRACE_MS) {
             try {
               await validateSession(credentials.password);
               setScreen(protectedScreenRef.current);
@@ -298,23 +312,39 @@ function App() {
               />
             )}
 
-            {(screen === 'loading' || screen === 'locked') && <View style={styles.container} />}
+            {screen === 'loading' && <View style={styles.container} />}
 
-            {isAppRoute(screen) && (
+            {routeToRender && (
               <View style={{ flex: 1 }}>
-                {routeScreens[screen]({
+                {routeScreens[routeToRender]({
                   onLogout: handleLogout,
                   onBack: () => setScreen('main'),
                   onMenuSelect: handleMenuSelect,
                 })}
                 <BottomNavigation
                   items={menuItems}
-                  activeRoute={screen}
+                  activeRoute={routeToRender}
                   loading={menuLoading}
                   error={menuError}
                   onSelect={handleMenuSelect}
                   onRetry={() => void loadMenus()}
                 />
+                {screen === 'locked' && (
+                  <View
+                    pointerEvents="auto"
+                    style={[
+                      styles.container,
+                      {
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                        backgroundColor: '#fff',
+                      },
+                    ]}
+                  />
+                )}
               </View>
             )}
           </KeyboardAvoidingView>

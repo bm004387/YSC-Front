@@ -236,11 +236,11 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
           unavailableMsg={getMsg('SIGNUP', '001')}
         />
 
-        {/* 이름 */}
+        {/* 닉네임 */}
         <AppInput
-          label="이름"
+          label="닉네임"
           required
-          placeholder="이름을 입력해주세요"
+          placeholder="커뮤니티에서 사용할 닉네임을 입력해주세요"
           value={usrNm}
           onChangeText={setUsrNm}
           autoCapitalize="none"

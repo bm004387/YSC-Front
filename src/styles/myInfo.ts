@@ -3,194 +3,297 @@ import {StyleSheet} from 'react-native';
 import colors from './colors';
 
 const myInfoStyles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F5F5',
   },
-
   header: {
-    height: 60,
-    paddingHorizontal: 24,
+    height: 58,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
+    backgroundColor: colors.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.gray200,
   },
-
   backButton: {
-    width: 50,
-    height: 40,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#F4F4F4',
+    alignItems: 'center',
     justifyContent: 'center',
   },
-
   backButtonText: {
-    fontSize: 26,
+    marginTop: -3,
+    fontSize: 29,
     color: colors.gray900,
   },
-
   headerTitle: {
+    marginLeft: 12,
     fontSize: 18,
     fontWeight: '700',
     color: colors.black,
   },
-
+  scrollContent: {
+    paddingBottom: 36,
+  },
   content: {
-    flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
   },
-
-  profileArea: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  profileHero: {
+    marginBottom: 28,
+    padding: 22,
+    borderRadius: 24,
+    backgroundColor: '#151515',
     overflow: 'hidden',
-    backgroundColor: colors.gray200,
+  },
+  profileHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  profileEyebrow: {
+    color: '#A7A7A7',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  profileStatus: {
+    height: 28,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    backgroundColor: '#262626',
+  },
+  profileStatusDot: {
+    width: 6,
+    height: 6,
+    marginRight: 7,
+    borderRadius: 3,
+    backgroundColor: '#B8D9C2',
+  },
+  profileStatusText: {
+    color: '#E7E7E7',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  profileHeroBody: {
+    marginTop: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profilePhotoWrap: {
+    width: 88,
+    height: 88,
+    marginRight: 17,
+    position: 'relative',
+  },
+  profileImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    overflow: 'hidden',
+    backgroundColor: '#E8E8E8',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   profileText: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.gray500,
-  },
-
-  profileButton: {
-    marginTop: 12,
-  },
-
-  profileButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
     color: colors.gray700,
   },
-
+  profileEditBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -1,
+    width: 29,
+    height: 29,
+    borderRadius: 15,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: '#151515',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileEditBadgeText: {
+    marginTop: -1,
+    color: colors.black,
+    fontSize: 19,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  profileIdentity: {
+    flex: 1,
+    minWidth: 0,
+  },
+  profileName: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  profileId: {
+    marginTop: 5,
+    color: '#A5A5A5',
+    fontSize: 13,
+  },
+  profileButton: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+  },
+  profileButtonText: {
+    color: colors.black,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   message: {
     alignSelf: 'stretch',
-    marginTop: 4,
-    marginBottom: 8,
-    color: '#D93025',
+    marginTop: 10,
+    marginBottom: 0,
+    color: '#FF9696',
     fontSize: 12,
     textAlign: 'center',
   },
-
   messageSuccess: {
     color: '#188038',
   },
-
-  modalButtonDisabled: {
-    opacity: 0.5,
-  },
-
   loader: {
     flex: 1,
   },
-
   section: {
-    marginBottom: 28,
+    marginBottom: 26,
   },
-
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.gray900,
+  sectionHeading: {
     marginBottom: 12,
-  },
-
-  infoCard: {
-    borderWidth: 1,
-    borderColor: colors.gray200,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-
-  infoRow: {
-    minHeight: 58,
-    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
   },
-
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.gray900,
+  },
+  sectionCaption: {
+    color: '#A0A0A0',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.6,
+  },
+  infoCard: {
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+  },
+  infoRow: {
+    minHeight: 60,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#EAEAEA',
+  },
   infoRowLast: {
     borderBottomWidth: 0,
   },
-
   addressInfoRow: {
     minHeight: 76,
-    paddingVertical: 14,
+    alignItems: 'flex-start',
   },
-
   addressValues: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 20,
     alignItems: 'flex-end',
   },
-
   addressDetailValue: {
-    marginTop: 3,
-    fontSize: 13,
+    marginTop: 4,
     color: colors.gray500,
+    fontSize: 12,
     textAlign: 'right',
   },
-
   infoLabel: {
-    fontSize: 14,
-    color: colors.gray500,
+    color: '#8B8B8B',
+    fontSize: 13,
   },
-
   infoValue: {
-    fontSize: 14,
+    maxWidth: '72%',
     color: colors.gray900,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'right',
   },
-
   settingCard: {
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.gray200,
-    borderRadius: 14,
+    borderColor: '#ECECEC',
     overflow: 'hidden',
   },
-
   settingRow: {
-    minHeight: 58,
-    paddingHorizontal: 18,
+    minHeight: 68,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#EAEAEA',
   },
-
   settingRowLast: {
     borderBottomWidth: 0,
   },
-
+  settingMarker: {
+    width: 38,
+    height: 38,
+    marginRight: 13,
+    borderRadius: 13,
+    backgroundColor: '#F2F2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingMarkerText: {
+    color: '#424242',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  settingCopy: {
+    flex: 1,
+  },
   settingTitle: {
-    fontSize: 14,
     color: colors.gray900,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
-
+  settingArrowWrap: {
+    width: 28,
+    height: 28,
+    marginLeft: 8,
+    borderRadius: 14,
+    backgroundColor: '#F6F6F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   settingArrow: {
-    fontSize: 18,
-    color: colors.gray400,
+    marginTop: -2,
+    color: '#777777',
+    fontSize: 22,
+    lineHeight: 24,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
     justifyContent: 'flex-end',
   },
-
   modalContent: {
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
@@ -199,14 +302,12 @@ const myInfoStyles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 36,
   },
-
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.black,
     marginBottom: 20,
   },
-
   input: {
     height: 50,
     borderWidth: 1,
@@ -217,7 +318,6 @@ const myInfoStyles = StyleSheet.create({
     color: colors.gray900,
     marginBottom: 12,
   },
-
   modalButton: {
     height: 50,
     borderRadius: 10,
@@ -226,24 +326,23 @@ const myInfoStyles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 8,
   },
-
   modalButtonText: {
     color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
-
+  modalButtonDisabled: {
+    opacity: 0.5,
+  },
   cancelButton: {
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   cancelButtonText: {
     fontSize: 14,
     color: colors.gray500,
   },
-
   toast: {
     position: 'absolute',
     left: 24,
@@ -257,9 +356,11 @@ const myInfoStyles = StyleSheet.create({
     zIndex: 10,
     elevation: 6,
   },
-
-  toastText: {color: '#fff', fontSize: 13, fontWeight: '600'},
-
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });
 
 export default myInfoStyles;

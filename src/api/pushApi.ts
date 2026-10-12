@@ -1,6 +1,5 @@
 import {Platform} from 'react-native';
 import {API_BASE_URL} from '../config/environment';
-import {getCommonCodeName} from '../utils/commonCodeUtil';
 
 type PushTokenPayload = {
   token: string;
@@ -35,7 +34,7 @@ export async function registerPushToken(
     : '002';
   await sendPushTokenRequest(
     accessToken,
-    {token, platform: await getCommonCodeName('PLATFORM', platformCode)},
+    {token, platform: platformCode},
     'POST',
   );
 }
@@ -49,7 +48,7 @@ export async function unregisterPushToken(
     : '002';
   await sendPushTokenRequest(
     accessToken,
-    {token, platform: await getCommonCodeName('PLATFORM', platformCode)},
+    {token, platform: platformCode},
     'DELETE',
   );
 }

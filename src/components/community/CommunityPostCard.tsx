@@ -12,6 +12,7 @@ import styles from '../../styles/community';
 
 import { API_BASE_URL } from '../../config/environment';
 import {getCachedCommonCodeName} from '../../utils/commonCodeUtil';
+import {getAvatarColor} from '../../utils/avatarColor';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
@@ -52,12 +53,12 @@ function CommunityPostCard({
       <View style={styles.postHeader}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${post.authorName || post.authorId} 프로필 보기`}
+          accessibilityLabel={`${post.authorName || '사용자'} 프로필 보기`}
           disabled={!onAuthorPress}
           onPress={() => onAuthorPress?.(post.authorId)}
           style={styles.postAuthorPressable}
         >
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, {backgroundColor: getAvatarColor(post.authorId)}]}>
             {post.profileImageFilSeq ? (
               <Image
                 source={{
@@ -74,10 +75,7 @@ function CommunityPostCard({
           </View>
           <View style={styles.author}>
             <Text style={styles.authorName}>
-              {post.authorName || post.authorId}
-            </Text>
-            <Text style={styles.meta}>
-              @{post.authorId} · {formatDate(post.createdAt)}
+              {post.authorName || '사용자'}
             </Text>
           </View>
         </Pressable>
@@ -185,12 +183,14 @@ function CommunityPostCard({
           </Pressable>
         )}
       </View>
+      <Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
     </View>
   );
 }
 
 export function formatCommunityDate(value: string) {
-  return formatCommunityCommentDate(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  return match ? `${match[1]}/${match[2]}/${match[3]}` : value;
 }
 
 export function formatCommunityCommentDate(value: string) {

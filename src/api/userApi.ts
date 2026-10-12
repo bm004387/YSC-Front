@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '../config/environment';
-import { getCommonCodeName } from '../utils/commonCodeUtil';
 
 export interface UserProfile {
   usrId: string;
@@ -57,13 +56,20 @@ export async function changeMyAddress(token: string, adr: string, dtlAdr: string
   });
 }
 
+export async function changeMyNickname(token: string, nckNm: string) {
+  return request<{nckNm: string}>('/api/user/me/nickname', token, {
+    method: 'PUT',
+    body: JSON.stringify({nckNm}),
+  });
+}
+
 export async function saveMyProfileImage(
   token: string,
   file: NativeUploadFile,
 ): Promise<{message: string; profileImageUrl: string}> {
   const form = new FormData();
-  form.append('filTyp', await getCommonCodeName('FIL_TYP', '002'));
-  form.append('filCd', await getCommonCodeName('FIL_CD', '002'));
+  form.append('filTyp', '002');
+  form.append('filCd', '002');
   form.append('file', file);
   const response = await fetch(`${API_BASE_URL}/api/user/me/profile-image`, {
     method: 'PUT',

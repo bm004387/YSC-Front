@@ -7,7 +7,6 @@ import {
   getToken,
   onMessage,
   onTokenRefresh,
-  registerDeviceForRemoteMessages,
   requestPermission,
 } from '@react-native-firebase/messaging';
 import {getAuthCredentials} from '../storage/tokenStorage';
@@ -29,6 +28,12 @@ function loadNotifee(): NotifeeApi | null {
 export default function usePushNotifications(enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
+    if (Platform.OS === 'ios') {
+      console.info(
+        '[Push] iOS 원격 푸시는 Apple Developer Program 및 APNs 설정 후 사용할 수 있습니다. 로컬 알림은 계속 사용할 수 있습니다.',
+      );
+      return;
+    }
     if (getApps().length === 0) {
       console.warn(
         '[Push] Firebase가 초기화되지 않았습니다. iOS target에 GoogleService-Info.plist를 추가해야 토큰을 등록할 수 있습니다.',
@@ -55,7 +60,6 @@ export default function usePushNotifications(enabled: boolean): void {
         return;
       }
 
-      if (Platform.OS === 'ios') await registerDeviceForRemoteMessages(messaging);
       if (Platform.OS === 'android' && notifee) {
         await notifee.createChannel({id: 'default', name: 'YSC notifications'});
       }
@@ -85,12 +89,6 @@ export default function usePushNotifications(enabled: boolean): void {
 
     void initializePush().catch(error => {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('aps-environment')) {
-        console.warn(
-          '[Push] APNs 등록을 건너뜁니다. Xcode YSC 타깃에 Push Notifications capability와 aps-environment가 포함된 provisioning profile이 필요합니다.',
-        );
-        return;
-      }
       console.warn(`[Push] 푸시 알림 초기화 실패: ${errorMessage}`);
     });
 

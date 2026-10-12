@@ -107,7 +107,7 @@ export const signup =
   async (
     usrId: string,
     pwd: string,
-    usrNm: string,
+    nckNm: string,
     hpNo: string,
     adr: string,
     dtlAdr: string,
@@ -125,7 +125,7 @@ export const signup =
           body: JSON.stringify({
             usrId,
             pwd,
-            usrNm,
+            nckNm,
             hpNo,
             adr,
             dtlAdr,

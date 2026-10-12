@@ -14,6 +14,7 @@ import { getCommonCodeValues } from '../utils/commonCodeUtil';
 import AddressInput from '../components/address/AddressInput';
 import {
   changeMyAddress,
+  changeMyNickname,
   changeMyPassword,
   getMyProfile,
   saveMyProfileImage,
@@ -30,7 +31,7 @@ interface MyInfoScreenProps {
   onBack: () => void;
 }
 
-type ModalType = 'password' | 'address' | 'pin' | null;
+type ModalType = 'password' | 'address' | 'nickname' | 'pin' | null;
 const emptyProfile: UserProfile = {
   usrId: '',
   usrNm: '',
@@ -64,6 +65,7 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
   const [detailAddress, setDetailAddress] = useState('');
+  const [nickname, setNickname] = useState('');
   const [pinStep, setPinStep] = useState<'new' | 'confirm'>('new');
   const [newPin, setNewPin] = useState('');
   const [pinValue, setPinValue] = useState('');
@@ -144,6 +146,8 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       if (type === 'address') {
         setAddress(profile.adr);
         setDetailAddress(profile.dtlAdr);
+      } else if (type === 'nickname') {
+        setNickname(profile.usrNm);
       } else {
         setPinStep('new');
         setNewPin('');
@@ -284,6 +288,30 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
     }
   };
 
+  const submitNickname = async () => {
+    const nextNickname = nickname.trim();
+    if (!nextNickname) {
+      setModalMessage(getMsg('COMMON', '001'));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const credentials = await getAuthCredentials();
+      if (!credentials) throw new Error(getMsg('MYINFO', '009'));
+      await changeMyNickname(credentials.password, nextNickname);
+      setProfile(current => ({...current, usrNm: nextNickname}));
+      setModalType(null);
+      setModalMessage('');
+    } catch (error) {
+      setModalMessage(
+        error instanceof Error ? error.message : getMsg('MYINFO', '010'),
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const submitPinStep = async (value: string) => {
     setPinValue(value);
     if (value.length !== 4) return;
@@ -385,43 +413,77 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       {loading ? (
         <ActivityIndicator style={myInfoStyles.loader} color="#3867D6" />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={myInfoStyles.scrollContent}
+        >
           <View style={myInfoStyles.content}>
-            <View style={myInfoStyles.profileArea}>
-              {profile.profileImageUrl && !profileImageLoadFailed ? (
-                <Image
-                  source={{
-                    uri: `${API_BASE_URL}${profile.profileImageUrl}?v=${profileImageVersion}`,
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                    cache: 'reload',
-                  }}
-                  style={myInfoStyles.profileImage}
-                  onError={() => setProfileImageLoadFailed(true)}
-                />
-              ) : (
-                <View style={myInfoStyles.profileImage}>
-                  <Text style={myInfoStyles.profileText}>
-                    {profile.usrNm.slice(0, 1) || 'Y'}
-                  </Text>
+            <View style={myInfoStyles.profileHero}>
+              <View style={myInfoStyles.profileHeroTop}>
+                <Text style={myInfoStyles.profileEyebrow}>MY PROFILE</Text>
+                <View style={myInfoStyles.profileStatus}>
+                  <View style={myInfoStyles.profileStatusDot} />
+                  <Text style={myInfoStyles.profileStatusText}>계정 정보</Text>
                 </View>
-              )}
-              <Pressable
-                style={myInfoStyles.profileButton}
-                onPress={() => void chooseProfileImage()}
-                disabled={saving}
-              >
-                <Text style={myInfoStyles.profileButtonText}>
-                  {saving ? '저장 중...' : '프로필 사진 변경'}
-                </Text>
-              </Pressable>
+              </View>
+              <View style={myInfoStyles.profileHeroBody}>
+                <View style={myInfoStyles.profilePhotoWrap}>
+                  {profile.profileImageUrl && !profileImageLoadFailed ? (
+                    <Image
+                      source={{
+                        uri: `${API_BASE_URL}${profile.profileImageUrl}?v=${profileImageVersion}`,
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                        cache: 'reload',
+                      }}
+                      style={myInfoStyles.profileImage}
+                      onError={() => setProfileImageLoadFailed(true)}
+                    />
+                  ) : (
+                    <View style={myInfoStyles.profileImage}>
+                      <Text style={myInfoStyles.profileText}>
+                        {profile.usrNm.slice(0, 1) || 'Y'}
+                      </Text>
+                    </View>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="프로필 사진 변경"
+                    style={myInfoStyles.profileEditBadge}
+                    onPress={() => void chooseProfileImage()}
+                    disabled={saving}
+                  >
+                    <Text style={myInfoStyles.profileEditBadgeText}>＋</Text>
+                  </Pressable>
+                </View>
+                <View style={myInfoStyles.profileIdentity}>
+                  <Text style={myInfoStyles.profileName} numberOfLines={1}>
+                    {profile.usrNm || profile.usrId || 'YSC'}
+                  </Text>
+                  <Text style={myInfoStyles.profileId} numberOfLines={1}>
+                    {profile.usrId}
+                  </Text>
+                  <Pressable
+                    style={myInfoStyles.profileButton}
+                    onPress={() => void chooseProfileImage()}
+                    disabled={saving}
+                  >
+                    <Text style={myInfoStyles.profileButtonText}>
+                      {saving ? '저장 중...' : '프로필 사진 변경'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
               {renderMessage(pageMessage)}
             </View>
 
             <View style={myInfoStyles.section}>
-              <Text style={myInfoStyles.sectionTitle}>기본 정보</Text>
+              <View style={myInfoStyles.sectionHeading}>
+                <Text style={myInfoStyles.sectionTitle}>기본 정보</Text>
+                <Text style={myInfoStyles.sectionCaption}>PROFILE</Text>
+              </View>
               <View style={myInfoStyles.infoCard}>
                 <InfoRow label="아이디" value={profile.usrId} />
-                <InfoRow label="이름" value={profile.usrNm} />
+                <InfoRow label="닉네임" value={profile.usrNm} />
                 <InfoRow label="휴대폰" value={profile.hpNo} last />
                 <View
                   style={[
@@ -446,34 +508,79 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
             </View>
 
             <View style={myInfoStyles.section}>
-              <Text style={myInfoStyles.sectionTitle}>계정 설정</Text>
+              <View style={myInfoStyles.sectionHeading}>
+                <Text style={myInfoStyles.sectionTitle}>계정 설정</Text>
+                <Text style={myInfoStyles.sectionCaption}>SECURITY</Text>
+              </View>
               <View style={myInfoStyles.settingCard}>
-                <Pressable
-                  style={myInfoStyles.settingRow}
+                <SettingAction
+                  marker="N"
+                  title="닉네임 변경"
+                  onPress={() => openModal('nickname')}
+                />
+                <SettingAction
+                  marker="PW"
+                  title="비밀번호 변경"
                   onPress={() => openModal('password')}
-                >
-                  <Text style={myInfoStyles.settingTitle}>비밀번호 변경</Text>
-                  <Text style={myInfoStyles.settingArrow}>›</Text>
-                </Pressable>
-                <Pressable
-                  style={myInfoStyles.settingRow}
+                />
+                <SettingAction
+                  marker="PIN"
+                  title="PIN 번호 변경"
                   onPress={() => openModal('pin')}
-                >
-                  <Text style={myInfoStyles.settingTitle}>PIN 번호 변경</Text>
-                  <Text style={myInfoStyles.settingArrow}>›</Text>
-                </Pressable>
-                <Pressable
-                  style={[myInfoStyles.settingRow, myInfoStyles.settingRowLast]}
+                />
+                <SettingAction
+                  marker="ADR"
+                  title="주소 변경"
+                  last
                   onPress={() => openModal('address')}
-                >
-                  <Text style={myInfoStyles.settingTitle}>주소 변경</Text>
-                  <Text style={myInfoStyles.settingArrow}>›</Text>
-                </Pressable>
+                />
               </View>
             </View>
           </View>
         </ScrollView>
       )}
+
+      <Modal
+        visible={modalType === 'nickname'}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={myInfoStyles.modalOverlay}>
+          <View style={myInfoStyles.modalContent}>
+            <Text style={myInfoStyles.modalTitle}>닉네임 변경</Text>
+            <TextInput
+              style={myInfoStyles.input}
+              placeholder="사용할 닉네임을 입력해주세요"
+              placeholderTextColor="#A0A0A0"
+              value={nickname}
+              onChangeText={value => {
+                setNickname(value);
+                setModalMessage('');
+              }}
+              maxLength={100}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+            />
+            {renderMessage(modalMessage)}
+            <Pressable
+              style={myInfoStyles.modalButton}
+              onPress={() => void submitNickname()}
+              disabled={saving}
+            >
+              <Text style={myInfoStyles.modalButtonText}>
+                {saving ? '저장 중...' : '저장'}
+              </Text>
+            </Pressable>
+            <Pressable style={myInfoStyles.cancelButton} onPress={closeModal}>
+              <Text style={myInfoStyles.cancelButtonText}>취소</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={modalType === 'pin'}
@@ -667,6 +774,36 @@ function InfoRow({
       <Text style={myInfoStyles.infoLabel}>{label}</Text>
       <Text style={myInfoStyles.infoValue}>{value || '-'}</Text>
     </View>
+  );
+}
+
+function SettingAction({
+  marker,
+  title,
+  onPress,
+  last = false,
+}: {
+  marker: string;
+  title: string;
+  onPress: () => void;
+  last?: boolean;
+}) {
+  return (
+    <Pressable
+      style={[myInfoStyles.settingRow, last && myInfoStyles.settingRowLast]}
+      onPress={onPress}
+      android_ripple={{color: '#eeeeee'}}
+    >
+      <View style={myInfoStyles.settingMarker}>
+        <Text style={myInfoStyles.settingMarkerText}>{marker}</Text>
+      </View>
+      <View style={myInfoStyles.settingCopy}>
+        <Text style={myInfoStyles.settingTitle}>{title}</Text>
+      </View>
+      <View style={myInfoStyles.settingArrowWrap}>
+        <Text style={myInfoStyles.settingArrow}>›</Text>
+      </View>
+    </Pressable>
   );
 }
 

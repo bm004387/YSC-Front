@@ -13,6 +13,7 @@ import {
   getCommunityFollowUsers,
 } from '../api/communityApi';
 import { API_BASE_URL } from '../config/environment';
+import {getAvatarColor} from '../utils/avatarColor';
 import useMsg from '../hooks/useMsg';
 import styles from '../styles/communityFollow';
 
@@ -90,7 +91,7 @@ function CommunityFollowListScreen({
     <View style={styles.userRow}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${item.usrNm} 프로필 보기`}
+        accessibilityLabel={`${item.usrNm || '사용자'} 프로필 보기`}
         onPress={() => onUserSelect(item.usrId)}
         style={styles.userIdentity}
       >
@@ -103,18 +104,18 @@ function CommunityFollowListScreen({
             style={styles.avatar}
           />
         ) : (
-          <View style={styles.avatarFallback}>
+          <View style={[styles.avatarFallback, {backgroundColor: getAvatarColor(item.usrId)}]}>
             <Text style={styles.avatarInitial}>
-              {item.usrNm.slice(0, 1) || '?'}
+              {item.usrNm?.slice(0, 1) || '?'}
             </Text>
           </View>
         )}
         <View style={styles.userText}>
           <Text numberOfLines={1} style={styles.userName}>
-            {item.usrNm}
+            {item.usrNm || '사용자'}
           </Text>
           <Text numberOfLines={1} style={styles.userId}>
-            @{item.usrId} · 게시물 {item.postCount}개
+            게시물 {item.postCount}개
           </Text>
         </View>
       </Pressable>
@@ -123,7 +124,7 @@ function CommunityFollowListScreen({
           {item.following ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '050')}`}
+              accessibilityLabel={`${item.usrNm || '사용자'} ${getMsg('COMMUNITY', '050')}`}
               disabled
               style={[styles.followButton, styles.messageButton]}
             >
@@ -134,7 +135,7 @@ function CommunityFollowListScreen({
           ) : (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '052')}`}
+              accessibilityLabel={`${item.usrNm || '사용자'} ${getMsg('COMMUNITY', '052')}`}
               onPress={() => void toggleFollow(item)}
               style={styles.followButton}
             >
@@ -145,7 +146,7 @@ function CommunityFollowListScreen({
           )}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${item.usrNm} ${getMsg('COMMUNITY', '051')}`}
+            accessibilityLabel={`${item.usrNm || '사용자'} ${getMsg('COMMUNITY', '051')}`}
             hitSlop={8}
             onPress={async () => {
               const removed = await onRemoveFollower(item.usrId);
@@ -165,8 +166,8 @@ function CommunityFollowListScreen({
         <Pressable
           accessibilityLabel={
             item.following
-              ? `${item.usrNm} 팔로우 취소`
-              : `${item.usrNm} 팔로우`
+              ? `${item.usrNm || '사용자'} 팔로우 취소`
+              : `${item.usrNm || '사용자'} 팔로우`
           }
           onPress={() => void toggleFollow(item)}
           style={[styles.followButton, item.following && styles.followingButton]}

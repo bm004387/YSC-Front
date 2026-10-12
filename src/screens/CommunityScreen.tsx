@@ -40,6 +40,8 @@ import styles from '../styles/community';
 
 import { API_BASE_URL } from '../config/environment';
 import {getCachedCommonCodeName} from '../utils/commonCodeUtil';
+import {getAvatarColor} from '../utils/avatarColor';
+import {showLocalMessageNotification} from '../utils/localNotificationUtil';
 type CommunityView =
   | 'feed'
   | 'mine'
@@ -56,6 +58,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
   const { getMsg } = useMsg();
   const [token, setToken] = useState('');
   const [myId, setMyId] = useState('');
+  const [myNickname, setMyNickname] = useState('');
+  const [myDisplayName, setMyDisplayName] = useState('');
   const [profileSummary, setProfileSummary] = useState<CommunityProfileSummary>(
     {
       postCount: 0,
@@ -133,6 +137,26 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     }, 1750);
   };
 
+  const showTestMessageNotification = async () => {
+    if (!profileUser) return;
+    const message =
+      '안녕하세요! 푸시 알림 미리보기 테스트 메시지입니다. 내용이 두 줄을 넘으면 말줄임표로 표시됩니다.';
+    try {
+      await showLocalMessageNotification({
+        userId: profileUser.usrId,
+        nickname: profileUser.usrNm || '사용자',
+        message,
+        profileImageUrl: profileUser.profileImageFilSeq
+          ? `${API_BASE_URL}/api/community/files/${profileUser.profileImageFilSeq}`
+          : undefined,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.warn('[Community/LocalNotification] 테스트 알림 표시 실패:', detail);
+      showToast(detail);
+    }
+  };
+
   const loadFeed = useCallback(
     async (authToken = token) => {
       if (!authToken) return;
@@ -169,12 +193,20 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     async (authToken = token) => {
       if (!authToken) return;
       try {
-        setProfileSummary(await getCommunityProfileSummary(authToken));
+        const [summary, profile] = await Promise.all([
+          getCommunityProfileSummary(authToken),
+          myId ? getCommunityUserProfile(authToken, myId) : Promise.resolve(null),
+        ]);
+        setProfileSummary(summary);
+        if (profile) {
+          setMyNickname(profile.usrNm);
+          setMyDisplayName(profile.userName);
+        }
       } catch (e) {
         console.warn('커뮤니티 프로필 통계 조회 실패', e);
       }
     },
-    [token],
+    [myId, token],
   );
 
   const loadSavedPosts = useCallback(
@@ -451,7 +483,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     avatarStyle: StyleProp<ViewStyle>,
     textStyle: StyleProp<TextStyle>,
   ) => (
-    <View style={[styles.avatar, avatarStyle]}>
+    <View style={[styles.avatar, avatarStyle, {backgroundColor: getAvatarColor(post.authorId)}]}>
       {post.profileImageFilSeq ? (
         <Image
           source={{
@@ -565,6 +597,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
               ? profileUser?.usrNm || '프로필'
               : communityView === 'follows'
               ? '팔로우'
+              : communityView === 'mine'
+              ? myNickname || '내 게시물'
               : '커뮤니티'}
           </Text>
         </View>
@@ -633,7 +667,12 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         </View>
       ) : null}
       {communityView === 'mine' || communityView === 'profile' ? (
-        <View style={styles.myPostsBar}>
+        <View
+          style={[
+            styles.myPostsBar,
+            communityView === 'profile' && styles.profilePostsBar,
+          ]}
+        >
           {communityView === 'profile' && profileUser?.profileImageFilSeq ? (
             <Image
               source={{
@@ -643,7 +682,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
               style={[styles.avatar, styles.myAvatar, styles.avatarImage]}
             />
           ) : communityView === 'profile' ? (
-            <View style={[styles.avatar, styles.myAvatar]}>
+            <View style={[styles.avatar, styles.myAvatar, {backgroundColor: getAvatarColor(profileUser?.usrId)}]}>
               <Text style={styles.avatarText}>
                 {profileUser?.usrNm.slice(0, 1) || '?'}
               </Text>
@@ -651,74 +690,97 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           ) : posts[0] ? (
             renderAvatar(posts[0], styles.myAvatar, styles.myAvatarText)
           ) : (
-            <View style={[styles.avatar, styles.myAvatar]}>
+            <View style={[styles.avatar, styles.myAvatar, {backgroundColor: getAvatarColor(myId)}]}>
               <Text style={styles.avatarText}>
                 {myId.slice(0, 1).toUpperCase() || '나'}
               </Text>
             </View>
           )}
-          <View style={styles.myPostsInfo}>
-            <View style={styles.myPostsStat}>
-              <Text style={styles.myPostsTitle}>
-                {(communityView === 'profile'
-                  ? profileUser?.postCount ?? 0
-                  : profileSummary.postCount
-                ).toLocaleString()}
-              </Text>
-              <Text style={styles.myPostsCaption}>게시물</Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="팔로워 목록 보기"
-              disabled={communityView !== 'mine'}
-              onPress={() => openFollowList('followers')}
-              style={styles.myPostsStat}
-            >
-              <Text style={styles.myPostsTitle}>
-                {(communityView === 'profile'
-                  ? profileUser?.followerCount ?? 0
-                  : profileSummary.followerCount
-                ).toLocaleString()}
-              </Text>
-              <Text style={styles.myPostsCaption}>팔로워</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="팔로잉 목록 보기"
-              disabled={communityView !== 'mine'}
-              onPress={() => openFollowList('following')}
-              style={styles.myPostsStat}
-            >
-              <Text style={styles.myPostsTitle}>
-                {(communityView === 'profile'
-                  ? profileUser?.followingCount ?? 0
-                  : profileSummary.followingCount
-                ).toLocaleString()}
-              </Text>
-              <Text style={styles.myPostsCaption}>팔로잉</Text>
-            </Pressable>
-          </View>
-          {communityView === 'profile' && profileUser ? (
-            <Pressable
-              accessibilityLabel={
-                profileUser.following ? '팔로우 취소' : '팔로우'
-              }
-              onPress={() => void toggleProfileFollow()}
-              style={[
-                styles.profileFollowButton,
-                profileUser.following && styles.profileFollowingButton,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.profileFollowText,
-                  profileUser.following && styles.profileFollowingText,
-                ]}
+          <View
+            style={[
+              styles.myPostsInfo,
+              communityView === 'profile' && styles.profilePostsInfo,
+            ]}
+          >
+            <Text numberOfLines={1} style={styles.myPostsNickname}>
+              {communityView === 'profile'
+                ? profileUser?.userName || '사용자'
+                : myDisplayName || '사용자'}
+            </Text>
+            <View style={styles.myPostsStats}>
+              <View style={styles.myPostsPostStat}>
+                <Text style={styles.myPostsTitle}>
+                  {(communityView === 'profile'
+                    ? profileUser?.postCount ?? 0
+                    : profileSummary.postCount
+                  ).toLocaleString()}
+                </Text>
+                <Text style={styles.myPostsCaption}>게시물</Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="팔로워 목록 보기"
+                disabled={communityView !== 'mine'}
+                onPress={() => openFollowList('followers')}
+                style={styles.myPostsRelationStat}
               >
-                {profileUser.following ? '팔로잉' : '팔로우'}
-              </Text>
-            </Pressable>
-          ) : null}
+                <Text style={styles.myPostsTitle}>
+                  {(communityView === 'profile'
+                    ? profileUser?.followerCount ?? 0
+                    : profileSummary.followerCount
+                  ).toLocaleString()}
+                </Text>
+                <Text style={styles.myPostsCaption}>팔로워</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="팔로잉 목록 보기"
+                disabled={communityView !== 'mine'}
+                onPress={() => openFollowList('following')}
+                style={styles.myPostsRelationStat}
+              >
+                <Text style={styles.myPostsTitle}>
+                  {(communityView === 'profile'
+                    ? profileUser?.followingCount ?? 0
+                    : profileSummary.followingCount
+                  ).toLocaleString()}
+                </Text>
+                <Text style={styles.myPostsCaption}>팔로잉</Text>
+              </Pressable>
+            </View>
+            {communityView === 'profile' && profileUser ? (
+              <View style={styles.profileActionsRow}>
+                <Pressable
+                  accessibilityLabel={
+                    profileUser.following ? '팔로우 취소' : '팔로우'
+                  }
+                  onPress={() => void toggleProfileFollow()}
+                  style={[
+                    styles.profileFollowButton,
+                    profileUser.following && styles.profileFollowingButton,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.profileFollowText,
+                      profileUser.following && styles.profileFollowingText,
+                    ]}
+                  >
+                    {profileUser.following ? '팔로잉' : '팔로우'}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="메시지 푸시 알림 테스트"
+                  onPress={showTestMessageNotification}
+                  style={styles.profileMessageButton}
+                >
+                  <Text style={styles.profileMessageButtonText}>메시지</Text>
+                </Pressable>
+                <View style={styles.profileActionSpacer} />
+              </View>
+            ) : null}
+          </View>
         </View>
       ) : communityView === 'saved' ? (
         <View style={styles.savedListBar}>
@@ -761,15 +823,25 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         </View>
       ) : (
         <FlatList
-          key={communityView === 'mine' ? 'my-posts-grid' : communityView}
+          key={
+            communityView === 'mine' || communityView === 'saved'
+              ? `${communityView}-posts-grid`
+              : communityView
+          }
           removeClippedSubviews={false}
           data={posts}
           keyExtractor={post => String(post.postSeq)}
           numColumns={
-            communityView === 'mine' || communityView === 'profile' ? 3 : 1
+            communityView === 'mine' ||
+            communityView === 'profile' ||
+            communityView === 'saved'
+              ? 3
+              : 1
           }
           renderItem={
-            communityView === 'mine' || communityView === 'profile'
+            communityView === 'mine' ||
+            communityView === 'profile' ||
+            communityView === 'saved'
               ? renderMyPostTile
               : ({ item }) => (
                   <CommunityPostCard
@@ -801,14 +873,18 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
             </Text>
           }
           columnWrapperStyle={
-            (communityView === 'mine' || communityView === 'profile') &&
+            (communityView === 'mine' ||
+              communityView === 'profile' ||
+              communityView === 'saved') &&
             posts.length
               ? styles.gridRow
               : undefined
           }
           contentContainerStyle={
             posts.length
-              ? communityView === 'mine' || communityView === 'profile'
+              ? communityView === 'mine' ||
+                communityView === 'profile' ||
+                communityView === 'saved'
                 ? styles.gridList
                 : styles.list
               : styles.emptyList
@@ -827,6 +903,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         currentUserId={myId}
         onAuthorPress={openAuthorProfile}
         showSaveAction={communityView !== 'saved'}
+        singlePostOnly={communityView === 'saved'}
         toastMessage={toastMessage}
         toastOpacity={toastOpacity}
         toastTranslateY={toastTranslateY}

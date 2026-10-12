@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Dimensions,
   FlatList,
   Image,
   Modal,
@@ -23,6 +24,7 @@ import styles from '../styles/community';
 import useMsg from '../hooks/useMsg';
 
 import { API_BASE_URL } from '../config/environment';
+import {getAvatarColor} from '../utils/avatarColor';
 
 interface CommunityPostDetailScreenProps {
   post: CommunityPost | null;
@@ -36,6 +38,7 @@ interface CommunityPostDetailScreenProps {
   onToast: (message: string) => void;
   currentUserId: string;
   showSaveAction?: boolean;
+  singlePostOnly?: boolean;
   toastMessage?: string;
   toastOpacity: Animated.Value;
   toastTranslateY: Animated.Value;
@@ -53,6 +56,7 @@ function CommunityPostDetailScreen({
   onToast,
   currentUserId,
   showSaveAction = true,
+  singlePostOnly = false,
   toastMessage = '',
   toastOpacity,
   toastTranslateY,
@@ -65,10 +69,56 @@ function CommunityPostDetailScreen({
   const [previewError, setPreviewError] = useState('');
   const [previewReloadKey, setPreviewReloadKey] = useState(0);
   const [commentsPost, setCommentsPost] = useState<CommunityPost | null>(null);
+  const [detailListHeight, setDetailListHeight] = useState(0);
+  const [lastPostHeight, setLastPostHeight] = useState(0);
+  const detailListRef = useRef<FlatList<CommunityPost>>(null);
   const detailPosts = post
-    ? [post, ...posts.filter(item => item.postSeq !== post.postSeq)]
+    ? singlePostOnly
+      ? [post]
+      : posts.some(item => item.postSeq === post.postSeq)
+      ? posts.map(item => (item.postSeq === post.postSeq ? post : item))
+      : [post, ...posts]
     : [];
   const postSeqKey = detailPosts.map(item => item.postSeq).join(',');
+  const lastPostSeq = detailPosts[detailPosts.length - 1]?.postSeq;
+  const footerHeight = Math.max(
+    0,
+    (detailListHeight || Dimensions.get('window').height) - lastPostHeight,
+  );
+
+  useEffect(() => {
+    setLastPostHeight(0);
+  }, [postSeqKey]);
+
+  useEffect(() => {
+    if (!post) return;
+
+    const selectedIndex = detailPosts.findIndex(
+      item => item.postSeq === post.postSeq,
+    );
+    if (selectedIndex < 0) return;
+
+    const scrollToSelectedPost = () => {
+      if (selectedIndex === 0) {
+        detailListRef.current?.scrollToOffset({ offset: 0, animated: false });
+        return;
+      }
+
+      detailListRef.current?.scrollToIndex({
+        index: selectedIndex,
+        animated: false,
+        viewPosition: 0,
+      });
+    };
+
+    const firstFrame = requestAnimationFrame(scrollToSelectedPost);
+    const retryTimer = setTimeout(scrollToSelectedPost, 120);
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      clearTimeout(retryTimer);
+    };
+  }, [post?.postSeq, postSeqKey]);
 
   useEffect(() => {
     const postSeqs = postSeqKey
@@ -127,7 +177,13 @@ function CommunityPostDetailScreen({
     const previews = commentPreviews[item.postSeq] ?? [];
 
     return (
-      <View>
+      <View
+        onLayout={({ nativeEvent }) => {
+          if (item.postSeq === lastPostSeq) {
+            setLastPostHeight(nativeEvent.layout.height);
+          }
+        }}
+      >
         <CommunityPostCard
           post={item}
           token={token}
@@ -140,29 +196,43 @@ function CommunityPostDetailScreen({
         <View style={styles.commentPreviewBlock}>
           {previews.map(comment => (
             <View key={comment.cmtSeq} style={styles.commentPreviewRow}>
-              {comment.profileImageFilSeq ? (
-                <Image
-                  source={{
-                    uri: `${API_BASE_URL}/api/community/files/${comment.profileImageFilSeq}`,
-                    headers: { Authorization: `Bearer ${token}` },
-                  }}
-                  style={styles.commentPreviewAvatar}
-                />
-              ) : (
-                <View style={styles.commentPreviewFallback}>
-                  <Text style={styles.commentPreviewFallbackText}>
-                    {comment.usrNm?.slice(0, 1) || '?'}
-                  </Text>
-                </View>
-              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${comment.usrNm || '사용자'} 프로필 보기`}
+                onPress={() => onAuthorPress(comment.usrId)}
+              >
+                {comment.profileImageFilSeq ? (
+                  <Image
+                    source={{
+                      uri: `${API_BASE_URL}/api/community/files/${comment.profileImageFilSeq}`,
+                      headers: { Authorization: `Bearer ${token}` },
+                    }}
+                    style={styles.commentPreviewAvatar}
+                  />
+                ) : (
+                  <View style={[styles.commentPreviewFallback, {backgroundColor: getAvatarColor(comment.usrId)}]}>
+                    <Text style={styles.commentPreviewFallbackText}>
+                      {comment.usrNm?.slice(0, 1) || '?'}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
               <View style={styles.commentPreviewBody}>
-                <Text style={styles.commentPreviewAuthor}>
-                  {comment.usrNm || comment.usrId}
+                <View style={styles.commentPreviewAuthorRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${comment.usrNm || '사용자'} 프로필 보기`}
+                    onPress={() => onAuthorPress(comment.usrId)}
+                  >
+                    <Text style={styles.commentPreviewAuthor}>
+                      {comment.usrNm || '사용자'}
+                    </Text>
+                  </Pressable>
                   <Text style={styles.commentDate}>
                     {'  '}
                     {formatCommunityCommentDate(comment.cmtDtm)}
                   </Text>
-                </Text>
+                </View>
                 <Text style={styles.commentPreviewText}>{comment.cmtCn}</Text>
               </View>
             </View>
@@ -209,15 +279,37 @@ function CommunityPostDetailScreen({
             >
               <Text style={styles.detailBack}>‹</Text>
             </Pressable>
-            <Text style={styles.detailTitle}>게시물</Text>
+            <Text numberOfLines={1} style={styles.detailTitle}>
+              {post?.authorName || '게시물'}
+            </Text>
             <View style={styles.detailHeaderSpacer} />
           </View>
           <FlatList
+            ref={detailListRef}
             style={styles.detailList}
+            onLayout={({ nativeEvent }) =>
+              setDetailListHeight(nativeEvent.layout.height)
+            }
             keyboardShouldPersistTaps="handled"
             data={detailPosts}
             keyExtractor={item => String(item.postSeq)}
             renderItem={renderPost}
+            ListFooterComponent={
+              <View style={{ height: footerHeight }} />
+            }
+            onScrollToIndexFailed={({ index, averageItemLength }) => {
+              detailListRef.current?.scrollToOffset({
+                offset: averageItemLength * index,
+                animated: false,
+              });
+              setTimeout(() => {
+                detailListRef.current?.scrollToIndex({
+                  index,
+                  animated: false,
+                  viewPosition: 0,
+                });
+              }, 50);
+            }}
             ListEmptyComponent={
               <Text style={styles.empty}>{getMsg('COMMUNITY', '044')}</Text>
             }
@@ -241,6 +333,10 @@ function CommunityPostDetailScreen({
             token={token}
             currentUserId={currentUserId}
             onClose={() => setCommentsPost(null)}
+            onAuthorPress={userId => {
+              setCommentsPost(null);
+              onAuthorPress(userId);
+            }}
             onCommentAdded={handleCommentAdded}
             onCommentDeleted={handleCommentDeleted}
             onToast={onToast}

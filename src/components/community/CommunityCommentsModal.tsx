@@ -26,6 +26,7 @@ import TextInput from '../common/NoAutofillTextInput';
 import useMsg from '../../hooks/useMsg';
 
 import { API_BASE_URL } from '../../config/environment';
+import {getAvatarColor} from '../../utils/avatarColor';
 
 interface CommunityCommentsModalProps {
   post: CommunityPost | null;
@@ -35,6 +36,7 @@ interface CommunityCommentsModalProps {
   onCommentAdded: (postSeq: number) => void;
   onCommentDeleted: (postSeq: number) => void;
   onToast: (message: string) => void;
+  onAuthorPress: (userId: string) => void;
   toastMessage: string;
   toastOpacity: Animated.Value;
   toastTranslateY: Animated.Value;
@@ -97,6 +99,7 @@ function CommunityCommentsModal({
   onCommentAdded,
   onCommentDeleted,
   onToast,
+  onAuthorPress,
   toastMessage,
   toastOpacity,
   toastTranslateY,
@@ -313,29 +316,43 @@ function CommunityCommentsModal({
                       depth > 1 && { marginLeft: Math.min(depth, 4) * 28 },
                     ]}
                   >
-                    {comment.profileImageFilSeq ? (
-                      <Image
-                        source={{
-                          uri: `${API_BASE_URL}/api/community/files/${comment.profileImageFilSeq}`,
-                          headers: { Authorization: `Bearer ${token}` },
-                        }}
-                        style={styles.commentAvatar}
-                      />
-                    ) : (
-                      <View style={styles.commentAvatarFallback}>
-                        <Text style={styles.commentAvatarText}>
-                          {comment.usrNm?.slice(0, 1) || '?'}
-                        </Text>
-                      </View>
-                    )}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${comment.usrNm || '사용자'} 프로필 보기`}
+                      onPress={() => onAuthorPress(comment.usrId)}
+                    >
+                      {comment.profileImageFilSeq ? (
+                        <Image
+                          source={{
+                            uri: `${API_BASE_URL}/api/community/files/${comment.profileImageFilSeq}`,
+                            headers: { Authorization: `Bearer ${token}` },
+                          }}
+                          style={styles.commentAvatar}
+                        />
+                      ) : (
+                        <View style={[styles.commentAvatarFallback, {backgroundColor: getAvatarColor(comment.usrId)}]}>
+                          <Text style={styles.commentAvatarText}>
+                            {comment.usrNm?.slice(0, 1) || '?'}
+                          </Text>
+                        </View>
+                      )}
+                    </Pressable>
                     <View style={styles.commentBody}>
-                      <Text style={styles.commentAuthor}>
-                        {comment.usrNm || comment.usrId}
+                      <View style={styles.commentAuthorRow}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`${comment.usrNm || '사용자'} 프로필 보기`}
+                          onPress={() => onAuthorPress(comment.usrId)}
+                        >
+                          <Text style={styles.commentAuthor}>
+                            {comment.usrNm || '사용자'}
+                          </Text>
+                        </Pressable>
                         <Text style={styles.commentDate}>
                           {'  '}
                           {formatCommunityCommentDate(comment.cmtDtm)}
                         </Text>
-                      </Text>
+                      </View>
                       {comment.deleted ? (
                         <Text style={styles.commentDeletedText}>
                           {getMsg('COMMUNITY', '035')}
@@ -348,7 +365,7 @@ function CommunityCommentsModal({
                           <View style={styles.commentActions}>
                             <Pressable
                               accessibilityLabel={`${
-                                comment.usrNm || comment.usrId
+                                comment.usrNm || '사용자'
                               }에게 답글 달기`}
                               onPress={() => {
                                 setReplyTo(comment);
@@ -445,7 +462,7 @@ function CommunityCommentsModal({
             {replyTo ? (
               <View style={styles.commentReplyNotice}>
                 <Text style={styles.commentReplyNoticeText}>
-                  {getMsg('COMMUNITY', '036', replyTo.usrNm || replyTo.usrId)}
+                  {getMsg('COMMUNITY', '036', replyTo.usrNm || '사용자')}
                 </Text>
                 <Pressable
                   accessibilityLabel="답글 대상 취소"

@@ -19,6 +19,7 @@ import {
 import styles from '../styles/community';
 import { API_BASE_URL } from '../config/environment';
 import useMsg from '../hooks/useMsg';
+import {getAvatarColor} from '../utils/avatarColor';
 
 type SearchTab = 'posts' | 'users';
 type UserFilter = 'discover' | 'following' | 'followers';
@@ -142,7 +143,7 @@ function CommunitySearchScreen({
       <View style={styles.searchUserRow}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${item.usrNm} 프로필 보기`}
+          accessibilityLabel={`${item.usrNm || '사용자'} 프로필 보기`}
           onPress={() => onUserSelect(item.usrId)}
           style={styles.searchUserIdentity}
         >
@@ -155,24 +156,24 @@ function CommunitySearchScreen({
               style={styles.searchUserAvatar}
             />
           ) : (
-            <View style={styles.searchUserAvatarFallback}>
+            <View style={[styles.searchUserAvatarFallback, {backgroundColor: getAvatarColor(item.usrId)}]}>
               <Text style={styles.searchUserAvatarText}>
-                {item.usrNm.slice(0, 1) || '?'}
+                {item.usrNm?.slice(0, 1) || '?'}
               </Text>
             </View>
           )}
           <View style={styles.searchUserDetails}>
             <Text numberOfLines={1} style={styles.searchUserName}>
-              {item.usrNm}
+              {item.usrNm || '사용자'}
             </Text>
             <Text numberOfLines={1} style={styles.searchUserId}>
-              @{item.usrId} · 게시물 {item.postCount}개
+              게시물 {item.postCount}개
             </Text>
           </View>
         </Pressable>
         <Pressable
           accessibilityLabel={
-            isFollowing ? `${item.usrNm} 팔로우 취소` : `${item.usrNm} 팔로우`
+            isFollowing ? `${item.usrNm || '사용자'} 팔로우 취소` : `${item.usrNm || '사용자'} 팔로우`
           }
           onPress={async () => {
             setFollowOverrides(current => ({
