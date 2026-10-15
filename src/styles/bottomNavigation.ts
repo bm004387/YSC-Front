@@ -21,6 +21,14 @@ const styles = StyleSheet.create({
     fontSize: 21,
     color: colors.gray500,
   },
+  iconImage: {
+    width: 22,
+    height: 22,
+    tintColor: colors.gray500,
+  },
+  activeIconImage: {
+    tintColor: colors.primary,
+  },
   label: {
     fontSize: 11,
     color: colors.gray500,

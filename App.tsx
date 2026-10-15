@@ -81,10 +81,13 @@ function App() {
 
 function AppContent() {
   const { getMsg } = useMsg();
+  const getMsgRef = useRef(getMsg);
+  getMsgRef.current = getMsg;
   const [screen, setScreen] = useState<Screen>('loading');
   const [authMode, setAuthMode] = useState<'pin' | 'password'>('password');
   const [savedUsrId, setSavedUsrId] = useState('');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [menuAccessToken, setMenuAccessToken] = useState('');
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [pinSetupCredentials, setPinSetupCredentials] = useState<{
@@ -115,13 +118,15 @@ function AppContent() {
       const credentials = await getAuthCredentials();
       if (!credentials || !credentials.password) {
         setMenuItems([]);
-        setMenuError(getMsg('MYINFO', '009'));
+        setMenuAccessToken('');
+        setMenuError(getMsgRef.current('MYINFO', '009'));
         return;
       }
+      setMenuAccessToken(credentials.password);
       const items = await getBottomMenuList(credentials.password);
       setMenuItems(items);
       if (items.length === 0) {
-        setMenuError(getMsg('COMMON', '027'));
+        setMenuError(getMsgRef.current('COMMON', '027'));
       }
     } catch (error) {
       if (error instanceof AuthExpiredError) {
@@ -130,8 +135,8 @@ function AppContent() {
       }
       console.error('하단 메뉴 조회 실패:', error);
       setMenuItems([]);
-      setMenuError(getMsg('COMMON', '023'));
-      Alert.alert(getMsg('COMMON', '023'), getMsg('COMMON', '044'));
+      setMenuError(getMsgRef.current('COMMON', '023'));
+      Alert.alert(getMsgRef.current('COMMON', '023'), getMsgRef.current('COMMON', '044'));
     } finally {
       setMenuLoading(false);
     }
@@ -271,6 +276,7 @@ function AppContent() {
     setSavedUsrId('');
     setAuthMode('password');
     setMenuItems([]);
+    setMenuAccessToken('');
     setScreen('login');
   }, []);
 
@@ -369,6 +375,7 @@ function AppContent() {
                 })}
                 <BottomNavigation
                   items={menuItems}
+                  accessToken={menuAccessToken}
                   activeRoute={routeToRender}
                   loading={menuLoading}
                   error={menuError}

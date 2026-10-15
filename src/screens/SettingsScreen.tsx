@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAllMenuList } from '../api/menuApi';
 import { AuthRequiredError, getRequiredAccessToken } from '../api/apiClient';
 import type { MenuItem } from '../api/menuApi';
+import { API_BASE_URL } from '../config/environment';
 import colors from '../styles/colors';
 import mainStyles from '../styles/main';
 import useMsg from '../hooks/useMsg';
@@ -11,26 +12,10 @@ interface SettingsScreenProps {
   onMenuSelect: (item: MenuItem) => void;
 }
 
-const menuIconGlyphs: Record<string, string> = {
-  folder: '📁',
-  document: '📄',
-  search: '🔍',
-  image: '🖼️',
-  calendar: '📅',
-  file: '📎',
-  settings: '⚙️',
-  list: '☰',
-  chart: '📊',
-  bell: '🔔',
-  map: '📍',
-  star: '★',
-  help: '❔',
-  user: '👤',
-};
-
 function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
   const { getMsg } = useMsg();
   const [menus, setMenus] = useState<MenuItem[]>([]);
+  const [accessToken, setAccessToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -39,6 +24,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
     setError('');
     try {
       const accessToken = await getRequiredAccessToken();
+      setAccessToken(accessToken);
       setMenus(await getAllMenuList(accessToken));
     } catch (loadError) {
       setError(loadError instanceof AuthRequiredError
@@ -84,9 +70,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
               <View key={parent.menuId} style={styles.group}>
                 <View style={styles.groupHeading}>
                   <View style={styles.groupIconSlot}>
-                    <Text style={styles.groupIcon}>
-                      {menuIconGlyphs[parent.iconName?.toLowerCase() ?? ''] ?? '•'}
-                    </Text>
+                    {renderMenuIcon(parent.icoFilSeq, accessToken, styles.groupIcon)}
                   </View>
                   <Text style={styles.groupTitle}>{parent.menuName}</Text>
                 </View>
@@ -100,9 +84,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
                       style={styles.menuItem}
                     >
                       <View style={styles.menuIconSlot}>
-                        <Text style={styles.menuIcon}>
-                          {menuIconGlyphs[item.iconName?.toLowerCase() ?? ''] ?? '•'}
-                        </Text>
+                        {renderMenuIcon(item.icoFilSeq, accessToken, styles.menuIcon)}
                       </View>
                       <Text numberOfLines={2} style={styles.menuLabel}>
                         {item.menuName}
@@ -118,6 +100,28 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function renderMenuIcon(icoFilSeq: number | null | undefined, accessToken: string, textStyle: object) {
+  if (typeof icoFilSeq === 'number' && icoFilSeq > 0) {
+    return (
+      <Image
+        source={{
+          uri: `${API_BASE_URL}/api/menu/icons/${icoFilSeq}`,
+          headers: {Authorization: `Bearer ${accessToken}`},
+        }}
+        style={styles.menuImage}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
+
+  return (
+    <Text style={textStyle}>
+      •
+    </Text>
   );
 }
 
@@ -145,6 +149,7 @@ const styles = StyleSheet.create({
   },
   menuIconSlot: { width: 24, alignItems: 'center', marginRight: 6 },
   menuIcon: { fontSize: 14, lineHeight: 20 },
+  menuImage: { width: 18, height: 18, tintColor: colors.gray700 },
   menuLabel: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.gray700 },
   statusArea: {
     flex: 1,

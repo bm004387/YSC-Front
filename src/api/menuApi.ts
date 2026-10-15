@@ -9,7 +9,7 @@ export interface MenuItem {
   menuLevel?: number;
   sortOrder?: number;
   menuType?: string;
-  iconName?: string | null;
+  icoFilSeq?: number | null;
   programCode?: string | null;
   programUrl: string | null;
 }

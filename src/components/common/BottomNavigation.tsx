@@ -1,11 +1,13 @@
 import React from 'react';
-import {Pressable, Text, View} from 'react-native';
+import {Image, Pressable, Text, View} from 'react-native';
+import {API_BASE_URL} from '../../config/environment';
 import type {MenuItem} from '../../api/menuApi';
 import styles from '../../styles/bottomNavigation';
 import useMsg from '../../hooks/useMsg';
 
 interface BottomNavigationProps {
   items: MenuItem[];
+  accessToken: string;
   activeRoute: string;
   loading: boolean;
   error: string | null;
@@ -13,15 +15,9 @@ interface BottomNavigationProps {
   onRetry: () => void;
 }
 
-const iconGlyphs: Record<string, string> = {
-  home: '⌂',
-  user: '●',
-  settings: '⚙',
-  community: '◎',
-};
-
 function BottomNavigation({
   items,
+  accessToken,
   activeRoute,
   loading,
   error,
@@ -42,6 +38,7 @@ function BottomNavigation({
         items.map(item => {
           const active = item.programUrl === activeRoute;
           const label = item.programUrl === 'settings' ? '전체메뉴' : item.menuName;
+          const hasFileIcon = typeof item.icoFilSeq === 'number' && item.icoFilSeq > 0;
           return (
             <Pressable
               key={item.menuId}
@@ -49,9 +46,21 @@ function BottomNavigation({
               accessibilityState={{selected: active}}
               onPress={() => onSelect(item)}
               style={styles.item}>
-              <Text style={[styles.icon, active && styles.activeText]}>
-                {iconGlyphs[item.iconName ?? ''] ?? '•'}
-              </Text>
+              {hasFileIcon ? (
+                <Image
+                  source={{
+                    uri: `${API_BASE_URL}/api/menu/icons/${item.icoFilSeq}`,
+                    headers: {Authorization: `Bearer ${accessToken}`},
+                  }}
+                  style={[styles.iconImage, active && styles.activeIconImage]}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
+              ) : (
+                <Text style={[styles.icon, active && styles.activeText]}>
+                  •
+                </Text>
+              )}
               <Text style={[styles.label, active && styles.activeText]}>
                 {label}
               </Text>
