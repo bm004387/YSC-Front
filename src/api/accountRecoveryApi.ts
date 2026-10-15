@@ -1,4 +1,5 @@
 import {API_BASE_URL} from '../config/environment';
+import {getCachedMsg} from '../utils/msgUtil';
 
 export interface RecoveryResult {
   success: boolean;
@@ -42,7 +43,7 @@ async function request<T>(path: string, body: object): Promise<T> {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.message ?? data.detail ?? `요청에 실패했습니다. (${response.status})`);
+    throw new Error(data.message ?? data.detail ?? getCachedMsg('COMMON', '023'));
   }
   return data as T;
 }

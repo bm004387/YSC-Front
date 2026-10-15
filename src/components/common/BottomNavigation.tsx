@@ -2,6 +2,7 @@ import React from 'react';
 import {Pressable, Text, View} from 'react-native';
 import type {MenuItem} from '../../api/menuApi';
 import styles from '../../styles/bottomNavigation';
+import useMsg from '../../hooks/useMsg';
 
 interface BottomNavigationProps {
   items: MenuItem[];
@@ -27,13 +28,15 @@ function BottomNavigation({
   onSelect,
   onRetry,
 }: BottomNavigationProps) {
+  const {getMsg} = useMsg();
+
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text style={styles.message}>메뉴 불러오는 중…</Text>
+        <Text style={styles.message}>{getMsg('COMMON', '053')}</Text>
       ) : error ? (
         <Pressable onPress={onRetry} style={styles.retryButton}>
-          <Text style={styles.message}>{error}  다시 시도</Text>
+          <Text style={styles.message}>{error}  {getMsg('COMMON', '044')}</Text>
         </Pressable>
       ) : (
         items.map(item => {

@@ -143,13 +143,16 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
 
   const showTestMessageNotification = async () => {
     if (!profileUser) return;
-    const message =
-      '안녕하세요! 푸시 알림 미리보기 테스트 메시지입니다. 내용이 두 줄을 넘으면 말줄임표로 표시됩니다.';
+    const message = getMsg('COMMUNITY', '053');
     try {
       await showLocalMessageNotification({
         userId: profileUser.usrId,
         nickname: profileUser.usrNm || '사용자',
         message,
+        errors: {
+          nativeModuleUnavailable: getMsg('COMMON', '055'),
+          permissionDisabled: getMsg('COMMON', '056'),
+        },
         profileImageUrl: profileUser.profileImageFilSeq
           ? `${API_BASE_URL}/api/community/files/${profileUser.profileImageFilSeq}`
           : undefined,

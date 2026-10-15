@@ -1,4 +1,6 @@
 import { API_BASE_URL } from '../config/environment';
+import { authenticatedFetch } from './apiClient';
+import { getCachedMsg } from '../utils/msgUtil';
 
 interface LoginUser {
   usrId: string;
@@ -12,15 +14,11 @@ interface LoginResponse {
   user: LoginUser;
 }
 
-/** PIN 설정 전에 가입 시 사용한 비밀번호를 검증해 PIN을 서버에 저장합니다. */
-export async function setupPin(
-  usrId: string,
-  pwd: string,
-  pin: string,
-): Promise<void> {
+/** 가입 시 사용한 비밀번호를 검증하고 PIN을 서버에 저장합니다. */
+export async function setupPin(usrId: string, pwd: string, pin: string): Promise<void> {
   await request<void>('/api/auth/pin/setup', {
     method: 'POST',
-    body: JSON.stringify({usrId, pwd, pin}),
+    body: JSON.stringify({ usrId, pwd, pin }),
   });
 }
 
@@ -28,141 +26,91 @@ export async function setupPin(
 export async function loginWithPassword(usrId: string, pwd: string): Promise<LoginResponse> {
   return request<LoginResponse>('/api/auth/login', {
     method: 'POST',
-    body: JSON.stringify({usrId, pwd}),
+    body: JSON.stringify({ usrId, pwd }),
   });
 }
 
 /** 보관된 Redis 세션 토큰이 여전히 유효한지 확인합니다. */
 export async function validateSession(token: string): Promise<void> {
-  await request<void>('/api/auth/session', {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/auth/session`, token, {
     method: 'GET',
-    headers: {Authorization: `Bearer ${token}`},
   });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message ?? getCachedMsg('COMMON', '023'));
+  }
 }
 
 /** 아이디와 PIN을 확인하고 Redis 세션 토큰을 발급받습니다. */
-export async function loginWithPin(
-  usrId: string,
-  pin: string,
-  sessionId?: string,
-): Promise<LoginResponse> {
+export async function loginWithPin(usrId: string, pin: string, sessionId?: string): Promise<LoginResponse> {
   return request<LoginResponse>('/api/auth/pin/login', {
     method: 'POST',
-    body: JSON.stringify({usrId, pin, sessionId}),
+    body: JSON.stringify({ usrId, pin, sessionId }),
   });
 }
 
-export const logout = async (
-  accessToken: string,
-): Promise<{
-  message: string;
-}> => {
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/auth/logout`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    },
-  );
+export const logout = async (accessToken: string): Promise<{ message: string }> => {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/auth/logout`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message ?? `로그아웃에 실패했습니다. (${response.status})`);
+    throw new Error(data.message ?? getCachedMsg('COMMON', '023'));
   }
 
   return data;
 };
 
-export const checkUsrId =
-  async (
-    usrId: string,
-  ): Promise<{
-    available: boolean;
-  }> => {
+export const checkUsrId = async (usrId: string): Promise<{ available: boolean }> => {
+  const url = `${API_BASE_URL}/api/auth/check-user-id?usrId=${encodeURIComponent(usrId)}`;
+  const response = await fetch(url);
 
-    const response =
-      await fetch(
-        `${API_BASE_URL}/api/auth/check-user-id?usrId=${encodeURIComponent(usrId,)}`,
-      );
+  const data = await response.json();
 
-    const data =
-      await response.json();
+  if (!response.ok) {
+    throw new Error(data.message ?? getCachedMsg('SIGNUP', '004'));
+  }
 
-    if (!response.ok) {
-      throw new Error(
-        data.message ??
-          `아이디 중복확인에 실패했습니다. (${response.status})`,
-      );
-    }
+  return data;
+};
 
-    return data;
-  };
+export const signup = async (usrId: string, pwd: string, nckNm: string, hpNo: string,
+                             adr: string, dtlAdr: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      usrId,
+      pwd,
+      nckNm,
+      hpNo,
+      adr,
+      dtlAdr,
+    }),
+  });
 
-export const signup =
-  async (
-    usrId: string,
-    pwd: string,
-    nckNm: string,
-    hpNo: string,
-    adr: string,
-    dtlAdr: string,
-  ) => {
+  const data = await response.json();
 
-    const response =
-      await fetch(
-        `${API_BASE_URL}/api/auth/signup`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':
-              'application/json',
-          },
-          body: JSON.stringify({
-            usrId,
-            pwd,
-            nckNm,
-            hpNo,
-            adr,
-            dtlAdr,
-          }),
-        },
-      );
+  if (!response.ok) {
+    throw new Error(data.message ?? getCachedMsg('SIGNUP', '004'));
+  }
 
-    const data =
-      await response.json();
+  return data;
+};
 
-    if (!response.ok) {
-      throw new Error(
-        data.message ??
-          `회원가입에 실패했습니다. (${response.status})`,
-      );
-    }
-
-    return data;
-  };
-
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-
-  const response =
-    await fetch(
-      `${API_BASE_URL}${path}`,
-      {
-        ...options,
-        headers: {
-          'Content-Type':
-            'application/json',
-          ...(options.headers ?? {}),
-        },
-      },
-    );
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers ?? {}),
+    },
+  });
 
   if (response.status === 204) {
     return undefined as T;
@@ -171,11 +119,12 @@ async function request<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.message ??
-        data.detail ??
-        `요청에 실패했습니다. (${response.status})`,
-    );
+    const fallbackMessage = path === '/api/auth/login'
+      ? getCachedMsg('AUTH', '001')
+      : path === '/api/auth/pin/login'
+      ? getCachedMsg('AUTH', '008')
+      : getCachedMsg('SIGNUP', '004');
+    throw new Error(data.message ?? data.detail ?? fallbackMessage);
   }
 
   return data as T;

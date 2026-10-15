@@ -1,59 +1,44 @@
 import { API_BASE_URL } from '../config/environment';
+import { getCachedMsg } from '../utils/msgUtil';
 
-export const getMsgList = async (): 
-  Promise<Record<string, string>> => {
-    const response = await fetch(`${API_BASE_URL}/api/msg/all`);
-    if (!response.ok) {
-      throw new Error(
-        `메시지 조회에 실패했습니다. (${response.status})`,
-      );
-    }
-    return await response.json();
-  };
+interface SmsResponse {
+  success: boolean;
+  message: string;
+}
 
-  export const sendSms = async (hpNo: string):
-    Promise<{success: boolean;message: string;}> => {
-      const response = await fetch(`${API_BASE_URL}/api/sms/send`,
-      {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          hpNo,
-        }),
-      },
-    );
+export const getMsgList = async (): Promise<Record<string, string>> => {
+  const response = await fetch(`${API_BASE_URL}/api/msg/all`);
+  if (!response.ok) {
+    throw new Error(getCachedMsg('COMMON', '023'));
+  }
+  return response.json();
+};
 
+export const sendSms = async (hpNo: string): Promise<SmsResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/sms/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hpNo }),
+  });
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message ?? `인증번호 발송에 실패했습니다. (${response.status})`);
+    throw new Error(data.message ?? getCachedMsg('SMS', '005'));
   }
 
   return data;
 };
 
-export const verifySms = async (
-  hpNo: string,
-  code: string,
-): Promise<{
-  success: boolean;
-  message: string;
-}> => {
-  const response = await fetch(`${API_BASE_URL}/api/sms/verify`,
-      {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          hpNo,
-          code,
-        }),
-      },
-    );
-
+export const verifySms = async (hpNo: string, code: string): Promise<SmsResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/sms/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hpNo, code }),
+  });
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message ?? `인증번호 확인에 실패했습니다. (${response.status})`);
+    throw new Error(data.message ?? getCachedMsg('SMS', '003'));
   }
 
   return data;

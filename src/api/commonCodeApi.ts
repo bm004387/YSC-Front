@@ -1,4 +1,6 @@
-import {API_BASE_URL} from '../config/environment';
+import { API_BASE_URL } from '../config/environment';
+import { authenticatedFetch, getRequiredAccessToken } from './apiClient';
+import { getCachedMsg } from '../utils/msgUtil';
 
 export interface CommonCodeItem {
   comCd: string;
@@ -10,9 +12,10 @@ export interface CommonCodeItem {
 }
 
 export async function getCommonCodeList(): Promise<CommonCodeItem[]> {
-  const response = await fetch(`${API_BASE_URL}/api/common-codes/all`);
+  const accessToken = await getRequiredAccessToken();
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/common-codes/all`, accessToken);
   if (!response.ok) {
-    throw new Error(`공통코드 조회에 실패했습니다. (${response.status})`);
+    throw new Error(getCachedMsg('COMMON', '023'));
   }
   return response.json();
 }

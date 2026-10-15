@@ -7,9 +7,7 @@ function loadNotifee(): NotifeeApi {
     return require('@notifee/react-native').default as NotifeeApi;
   } catch (error) {
     console.warn('[LocalNotification] Notifee native module is unavailable:', error);
-    throw new Error(
-      '로컬 알림 모듈을 찾지 못했습니다. Xcode에서 앱을 다시 빌드해 주세요.',
-    );
+    throw new Error('NOTIFEE_UNAVAILABLE');
   }
 }
 
@@ -18,6 +16,10 @@ interface LocalMessageNotification {
   nickname: string;
   message: string;
   profileImageUrl?: string;
+  errors: {
+    nativeModuleUnavailable: string;
+    permissionDisabled: string;
+  };
 }
 
 /** Displays a device-local message notification without using FCM or APNs. */
@@ -26,12 +28,18 @@ export async function showLocalMessageNotification({
   nickname,
   message,
   profileImageUrl,
+  errors,
 }: LocalMessageNotification): Promise<void> {
-  const notifee = loadNotifee();
+  let notifee: NotifeeApi;
+  try {
+    notifee = loadNotifee();
+  } catch {
+    throw new Error(errors.nativeModuleUnavailable);
+  }
   const settings = await notifee.requestPermission();
 
   if (settings.authorizationStatus === 0) {
-    throw new Error('알림 권한이 꺼져 있습니다. iPhone 설정에서 YSC 알림을 허용해 주세요.');
+    throw new Error(errors.permissionDisabled);
   }
 
   const androidChannelId =

@@ -1,4 +1,6 @@
 import { API_BASE_URL } from '../config/environment';
+import { authenticatedFetch } from './apiClient';
+import { getCachedMsg } from '../utils/msgUtil';
 
 export interface CommunityMedia {
   filSeq: number;
@@ -51,157 +53,92 @@ export interface CommunityUserSearchResult {
   following: boolean;
 }
 export type CommunityRelationType = 'followers' | 'following';
-export type CommunityFeedType =
-  | 'recommended'
-  | 'following'
-  | 'popular'
-  | 'saved';
+export type CommunityFeedType = 'recommended' | 'following' | 'popular' | 'saved';
+type CommunityUploadFile = {
+  uri: string;
+  fileName?: string | null;
+  type?: string | null;
+};
+type CommunityRequestOptions = RequestInit & { multipart?: boolean };
 
-export async function getCommunityFeed(
-  token: string,
-  type: CommunityFeedType,
-  limit = 50,
-): Promise<CommunityPost[]> {
+export async function getCommunityFeed(token: string, type: CommunityFeedType,
+                                       limit = 50): Promise<CommunityPost[]> {
   return request(`/api/community/feed?type=${type}&limit=${limit}`, token);
 }
-export async function getCommunityComments(
-  token: string,
-  postSeq: number,
-): Promise<CommunityComment[]> {
+export async function getCommunityComments(token: string, postSeq: number):
+  Promise<CommunityComment[]> {
   return request(`/api/community/posts/${postSeq}/comments`, token);
 }
-export async function getCommunityCommentPreviews(
-  token: string,
-  postSeqs: number[],
-): Promise<CommunityCommentPreview[]> {
+export async function getCommunityCommentPreviews(token: string, postSeqs: number[]):
+  Promise<CommunityCommentPreview[]> {
   if (postSeqs.length === 0) return [];
   const query = postSeqs.map(postSeq => `postSeq=${postSeq}`).join('&');
   return request(`/api/community/comments/previews?${query}`, token);
 }
-export async function addCommunityComment(
-  token: string,
-  postSeq: number,
-  content: string,
-  parentCmtSeq?: number | null,
-) {
+export async function addCommunityComment(token: string, postSeq: number, content: string,
+                                          parentCmtSeq?: number | null) {
   return request(`/api/community/posts/${postSeq}/comments`, token, {
     method: 'POST',
     body: JSON.stringify({ content, parentCmtSeq: parentCmtSeq ?? null }),
   });
 }
-export async function updateCommunityComment(
-  token: string,
-  postSeq: number,
-  cmtSeq: number,
-  content: string,
-) {
+export async function updateCommunityComment(token: string, postSeq: number, cmtSeq: number,
+                                             content: string) {
   return request(`/api/community/posts/${postSeq}/comments/${cmtSeq}`, token, {
     method: 'PUT',
     body: JSON.stringify({ content }),
   });
 }
-export async function deleteCommunityComment(
-  token: string,
-  postSeq: number,
-  cmtSeq: number,
-) {
+export async function deleteCommunityComment(token: string, postSeq: number, cmtSeq: number) {
   return request(`/api/community/posts/${postSeq}/comments/${cmtSeq}`, token, {
     method: 'DELETE',
   });
 }
-export async function getMyCommunityPosts(
-  token: string,
-): Promise<CommunityPost[]> {
+export async function getMyCommunityPosts(token: string): Promise<CommunityPost[]> {
   return request('/api/community/feed?type=mine&limit=50', token);
 }
-export async function getCommunityProfileSummary(
-  token: string,
-): Promise<CommunityProfileSummary> {
+export async function getCommunityProfileSummary(token: string): Promise<CommunityProfileSummary> {
   return request('/api/community/profile/summary', token);
 }
-export async function getCommunityFollowUsers(
-  token: string,
-  relationType: CommunityRelationType,
-): Promise<CommunityUserSearchResult[]> {
-  return request(
-    `/api/community/profile/follows?type=${relationType}&limit=100`,
-    token,
-  );
+export async function getCommunityFollowUsers(token: string, relationType: CommunityRelationType):
+  Promise<CommunityUserSearchResult[]> {
+  return request(`/api/community/profile/follows?type=${relationType}&limit=100`, token);
 }
-export async function removeCommunityFollower(
-  token: string,
-  userId: string,
-): Promise<{ success: boolean }> {
-  return request(
-    `/api/community/profile/followers/${encodeURIComponent(userId)}`,
-    token,
-    { method: 'DELETE' },
-  );
+export async function removeCommunityFollower(token: string, userId: string):
+  Promise<{ success: boolean }> {
+  return request(`/api/community/profile/followers/${encodeURIComponent(userId)}`, token, {
+    method: 'DELETE',
+  });
 }
-export async function getCommunityUserProfile(
-  token: string,
-  userId: string,
-): Promise<CommunityUserProfile> {
-  return request(
-    `/api/community/users/${encodeURIComponent(userId)}/profile`,
-    token,
-  );
+export async function getCommunityUserProfile(token: string, userId: string):
+  Promise<CommunityUserProfile> {
+  return request(`/api/community/users/${encodeURIComponent(userId)}/profile`, token);
 }
-export async function getCommunityUserPosts(
-  token: string,
-  userId: string,
-): Promise<CommunityPost[]> {
-  return request(
-    `/api/community/users/${encodeURIComponent(userId)}/posts`,
-    token,
-  );
+export async function getCommunityUserPosts(token: string, userId: string):
+  Promise<CommunityPost[]> {
+  return request(`/api/community/users/${encodeURIComponent(userId)}/posts`, token);
 }
-export async function searchCommunityUsers(
-  token: string,
-  query: string,
-  filter: 'discover' | 'following' | 'followers',
-): Promise<CommunityUserSearchResult[]> {
-  return request(
-    `/api/community/search/users?query=${encodeURIComponent(
-      query,
-    )}&filter=${filter}&limit=50`,
-    token,
-  );
+export async function searchCommunityUsers(token: string, query: string,
+                                           filter: 'discover' | 'following' | 'followers'):
+  Promise<CommunityUserSearchResult[]> {
+  const path = `/api/community/search/users?query=${encodeURIComponent(query)}&filter=${filter}&limit=50`;
+  return request(path, token);
 }
-export async function searchCommunityPosts(
-  token: string,
-  query: string,
-): Promise<CommunityPost[]> {
-  return request(
-    `/api/community/search/posts?query=${encodeURIComponent(query)}&limit=50`,
-    token,
-  );
+export async function searchCommunityPosts(token: string, query: string):
+  Promise<CommunityPost[]> {
+  return request(`/api/community/search/posts?query=${encodeURIComponent(query)}&limit=50`, token);
 }
-export async function setCommunityFollow(
-  token: string,
-  userId: string,
-  enabled: boolean,
-) {
-  return request(
-    `/api/community/users/${encodeURIComponent(userId)}/follow`,
-    token,
-    {
-      method: 'PUT',
-      body: JSON.stringify({ enabled }),
-    },
-  );
+export async function setCommunityFollow(token: string, userId: string, enabled: boolean) {
+  return request(`/api/community/users/${encodeURIComponent(userId)}/follow`, token, {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  });
 }
-export async function getSavedCommunityPosts(
-  token: string,
-): Promise<CommunityPost[]> {
+export async function getSavedCommunityPosts(token: string): Promise<CommunityPost[]> {
   return request('/api/community/feed?type=saved&limit=50', token);
 }
-export async function setCommunityReaction(
-  token: string,
-  postSeq: number,
-  kind: 'like' | 'save',
-  enabled: boolean,
-) {
+export async function setCommunityReaction(token: string, postSeq: number, kind: 'like' | 'save',
+                                           enabled: boolean) {
   return request(`/api/community/posts/${postSeq}/${kind}`, token, {
     method: 'PUT',
     body: JSON.stringify({ enabled }),
@@ -212,11 +149,8 @@ export async function markCommunityPostSeen(token: string, postSeq: number) {
     method: 'POST',
   });
 }
-export async function createCommunityPost(
-  token: string,
-  content: string,
-  files: Array<{ uri: string; fileName?: string | null; type?: string | null }>,
-) {
+export async function createCommunityPost(token: string, content: string,
+                                          files: CommunityUploadFile[]) {
   const body = new FormData();
   body.append('content', content);
   body.append('visibility', '001');
@@ -235,21 +169,17 @@ export async function createCommunityPost(
     multipart: true,
   });
 }
-async function request<T = unknown>(
-  path: string,
-  token: string,
-  options: RequestInit & { multipart?: boolean } = {},
-): Promise<T> {
+async function request<T = unknown>(path: string, token: string,
+                                    options: CommunityRequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
   if (!options.multipart) headers['Content-Type'] = 'application/json';
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}${path}`, token, {
     ...options,
     headers,
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok)
-    throw new Error(
-      data?.message || `요청에 실패했습니다. (${response.status})`,
-    );
+  if (!response.ok) {
+    throw new Error(data?.message || getCachedMsg('COMMON', '023'));
+  }
   return data as T;
 }

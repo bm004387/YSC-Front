@@ -1,4 +1,5 @@
 import {getCommonCodeList, type CommonCodeItem} from '../api/commonCodeApi';
+import {getCachedMsg} from './msgUtil';
 
 const codeCache = new Map<string, CommonCodeItem>();
 let loadPromise: Promise<void> | null = null;
@@ -30,7 +31,7 @@ export async function getCommonCodeName(
 ): Promise<string> {
   await loadCommonCodes();
   const item = codeCache.get(cacheKey(comCd, comDtlCd));
-  if (!item) throw new Error(`공통코드를 찾을 수 없습니다: ${comCd}/${comDtlCd}`);
+  if (!item) throw new Error(getCachedMsg('COMMON', '023'));
   return item.comDtlNm;
 }
 
@@ -49,7 +50,7 @@ export async function getCommonCodeDescription(
 ): Promise<string> {
   await loadCommonCodes();
   const item = codeCache.get(cacheKey(comCd, comDtlCd));
-  if (!item) throw new Error(`공통코드를 찾을 수 없습니다: ${comCd}/${comDtlCd}`);
+  if (!item) throw new Error(getCachedMsg('COMMON', '023'));
   return item.comDtlDesc;
 }
 

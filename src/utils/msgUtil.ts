@@ -1,8 +1,22 @@
+let cachedMessages: Record<string, string> = {};
+
+/** Stores messages loaded from the API for use by non-React helpers. */
+export const setMsgCache = (messages: Record<string, string>): void => {
+  cachedMessages = messages;
+};
+
+/** Resolves database messages outside React components. */
+export const getCachedMsg = (
+  menuId: string,
+  msgCd: string,
+  ...args: Array<string | number>
+): string => getMsg(cachedMessages, menuId, msgCd, ...args);
+
 export const getMsg = (
   messages: Record<string, string>,
   menuId: string,
   msgCd: string,
-  ...args: string[]
+  ...args: Array<string | number>
 ): string => {
 
   const key = `${menuId}:${msgCd}`;
@@ -13,12 +27,11 @@ export const getMsg = (
     return `${menuId}_${msgCd}`;
   }
 
-  args.forEach((arg, index) => {
-    message = message.replace(
-      `{${index}}`,
-      arg,
-    );
-  });
+  message = message.replace(/\{(\d+)\}/g, (placeholder, index) =>
+    args[Number(index)] === undefined
+      ? placeholder
+      : String(args[Number(index)]),
+  );
 
   return message;
 };

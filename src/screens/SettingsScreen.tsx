@@ -1,13 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAllMenuList } from '../api/menuApi';
+import { AuthRequiredError, getRequiredAccessToken } from '../api/apiClient';
 import type { MenuItem } from '../api/menuApi';
 import colors from '../styles/colors';
 import mainStyles from '../styles/main';
@@ -44,13 +38,12 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
     setLoading(true);
     setError('');
     try {
-      setMenus(await getAllMenuList());
+      const accessToken = await getRequiredAccessToken();
+      setMenus(await getAllMenuList(accessToken));
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : getMsg('COMMON', '023'),
-      );
+      setError(loadError instanceof AuthRequiredError
+        ? getMsg('MYINFO', '009')
+        : getMsg('COMMON', '023'));
     } finally {
       setLoading(false);
     }
@@ -60,17 +53,15 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
     void loadMenus();
   }, []);
 
-  const groups = useMemo(
-    () =>
-      menus
-        .filter(parent => parent.programUrl !== 'settings')
-        .map(parent => ({
-          parent,
-          children: menus.filter(item => item.upperMenuId === parent.menuId),
-        }))
-        .filter(group => group.children.length > 0),
-    [menus],
-  );
+  const groups = useMemo(() =>
+    menus
+      .filter(parent => parent.programUrl !== 'settings')
+      .map(parent => ({
+        parent,
+        children: menus.filter(item => item.upperMenuId === parent.menuId),
+      }))
+      .filter(group => group.children.length > 0),
+  [menus]);
 
   return (
     <View style={mainStyles.container}>
@@ -94,8 +85,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
                 <View style={styles.groupHeading}>
                   <View style={styles.groupIconSlot}>
                     <Text style={styles.groupIcon}>
-                      {menuIconGlyphs[parent.iconName?.toLowerCase() ?? ''] ??
-                        '•'}
+                      {menuIconGlyphs[parent.iconName?.toLowerCase() ?? ''] ?? '•'}
                     </Text>
                   </View>
                   <Text style={styles.groupTitle}>{parent.menuName}</Text>
@@ -111,8 +101,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
                     >
                       <View style={styles.menuIconSlot}>
                         <Text style={styles.menuIcon}>
-                          {menuIconGlyphs[item.iconName?.toLowerCase() ?? ''] ??
-                            '•'}
+                          {menuIconGlyphs[item.iconName?.toLowerCase() ?? ''] ?? '•'}
                         </Text>
                       </View>
                       <Text numberOfLines={2} style={styles.menuLabel}>

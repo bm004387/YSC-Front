@@ -1,12 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import {getMessaging, getToken} from '@react-native-firebase/messaging';
-import {
-  Alert,
-  AppState,
-  KeyboardAvoidingView,
-  Platform,
-  View,
-} from 'react-native';
+import { getMessaging, getToken } from '@react-native-firebase/messaging';
+import { Alert, AppState, KeyboardAvoidingView, Platform, View } from 'react-native';
 
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +17,11 @@ import CommunityScreen from './src/screens/CommunityScreen';
 import BottomNavigation from './src/components/common/BottomNavigation';
 import { getBottomMenuList } from './src/api/menuApi';
 import { loginWithPin, logout, validateSession } from './src/api/authApi';
+import {
+  AuthExpiredError,
+  registerAuthExpiredHandler,
+  resetAuthExpiredState,
+} from './src/api/apiClient';
 import type { MenuItem } from './src/api/menuApi';
 import {
   clearAuthCredentials,
@@ -35,12 +34,22 @@ import {
 } from './src/storage/tokenStorage';
 import { getRememberedUserId } from './src/storage/tokenStorage';
 import { unregisterPushToken } from './src/api/pushApi';
+import { loadCommonCodes } from './src/utils/commonCodeUtil';
 import usePushNotifications from './src/hooks/usePushNotifications';
+import useMsg from './src/hooks/useMsg';
 
 import { MsgProvider } from './src/context/MsgContext';
 
 type AppRoute = 'main' | 'myInfo' | 'settings' | 'community';
-type Screen = 'loading' | 'locked' | 'login' | 'signup' | 'recovery' | 'pinSetup' | 'pinConfirm' | AppRoute;
+type Screen =
+  | 'loading'
+  | 'locked'
+  | 'login'
+  | 'signup'
+  | 'recovery'
+  | 'pinSetup'
+  | 'pinConfirm'
+  | AppRoute;
 const SESSION_RESUME_GRACE_MS = 3_000;
 
 interface RouteScreenProps {
@@ -49,25 +58,29 @@ interface RouteScreenProps {
   onMenuSelect: (item: MenuItem) => void;
 }
 
-const routeScreens: Record<
-  AppRoute,
-  (props: RouteScreenProps) => React.ReactNode
-> = {
+const routeScreens: Record<AppRoute, (props: RouteScreenProps) => React.ReactNode> = {
   main: ({ onLogout }) => <MainScreen onLogout={onLogout} />,
   myInfo: ({ onBack }) => <MyInfoScreen onBack={onBack} />,
-  settings: ({ onMenuSelect }) => (
-    <SettingsScreen onMenuSelect={onMenuSelect} />
-  ),
+  settings: ({ onMenuSelect }) => <SettingsScreen onMenuSelect={onMenuSelect} />,
   community: ({ onBack }) => <CommunityScreen onBack={onBack} />,
 };
 
 function isAppRoute(route: string | null): route is AppRoute {
-  return (
-    route !== null && Object.prototype.hasOwnProperty.call(routeScreens, route)
-  );
+  return route !== null && Object.prototype.hasOwnProperty.call(routeScreens, route);
 }
 
 function App() {
+  return (
+    <SafeAreaProvider>
+      <MsgProvider>
+        <AppContent />
+      </MsgProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
+  const { getMsg } = useMsg();
   const [screen, setScreen] = useState<Screen>('loading');
   const [authMode, setAuthMode] = useState<'pin' | 'password'>('password');
   const [savedUsrId, setSavedUsrId] = useState('');
@@ -99,23 +112,38 @@ function App() {
     setMenuLoading(true);
     setMenuError(null);
     try {
-      const items = await getBottomMenuList();
+      const credentials = await getAuthCredentials();
+      if (!credentials || !credentials.password) {
+        setMenuItems([]);
+        setMenuError(getMsg('MYINFO', '009'));
+        return;
+      }
+      const items = await getBottomMenuList(credentials.password);
       setMenuItems(items);
       if (items.length === 0) {
-        setMenuError('등록된 메뉴가 없습니다.');
+        setMenuError(getMsg('COMMON', '027'));
       }
     } catch (error) {
+      if (error instanceof AuthExpiredError) {
+        setMenuItems([]);
+        return;
+      }
       console.error('하단 메뉴 조회 실패:', error);
       setMenuItems([]);
-      setMenuError('메뉴 조회 실패.');
-      Alert.alert(
-        '메뉴 조회 실패',
-        '서버 배포와 메뉴 초기 데이터를 확인해주세요.',
-      );
+      setMenuError(getMsg('COMMON', '023'));
+      Alert.alert(getMsg('COMMON', '023'), getMsg('COMMON', '044'));
     } finally {
       setMenuLoading(false);
     }
   };
+
+  React.useEffect(() =>
+    registerAuthExpiredHandler(() => {
+      void clearBackgroundTimestamp();
+      setAuthMode('pin');
+      setScreen('login');
+    }),
+  []);
 
   React.useEffect(() => {
     let disposed = false;
@@ -123,7 +151,9 @@ function App() {
     const restoreOnLaunch = async () => {
       try {
         const [credentials, rememberedId, backgroundAt] = await Promise.all([
-          getAuthCredentials(), getRememberedUserId(), getBackgroundTimestamp(),
+          getAuthCredentials(),
+          getRememberedUserId(),
+          getBackgroundTimestamp(),
         ]);
         if (disposed) return;
         if (!credentials) {
@@ -133,11 +163,14 @@ function App() {
           return;
         }
         setSavedUsrId(credentials.username);
-          const launchElapsed = backgroundAt === null ? Infinity : Date.now() - backgroundAt;
-          if (launchElapsed >= 0 && launchElapsed < SESSION_RESUME_GRACE_MS) {
+        const launchElapsed = backgroundAt === null ? Infinity : Date.now() - backgroundAt;
+        if (launchElapsed >= 0 && launchElapsed < SESSION_RESUME_GRACE_MS) {
           try {
             await validateSession(credentials.password);
             if (disposed) return;
+            void loadCommonCodes().catch(error => {
+              console.error('공통코드 조회 실패:', error);
+            });
             setAuthMode('pin');
             setScreen('main');
             void loadMenus();
@@ -167,9 +200,7 @@ function App() {
       previousAppState = nextAppState;
       if (nextAppState === 'inactive') return;
 
-      const leaving =
-        nextAppState === 'background' &&
-        (Platform.OS !== 'ios' || wasInactive);
+      const leaving = nextAppState === 'background' && (Platform.OS !== 'ios' || wasInactive);
       const returning = nextAppState === 'active' && screenRef.current === 'locked';
 
       if (leaving && isAppRoute(screenRef.current)) {
@@ -179,7 +210,10 @@ function App() {
       } else if (returning && initialisedRef.current && screenRef.current === 'locked') {
         void (async () => {
           await backgroundSaveRef.current;
-          const [credentials, backgroundAt] = await Promise.all([getAuthCredentials(), getBackgroundTimestamp()]);
+          const [credentials, backgroundAt] = await Promise.all([
+            getAuthCredentials(),
+            getBackgroundTimestamp(),
+          ]);
           const elapsed = backgroundAt === null ? Infinity : Date.now() - backgroundAt;
           if (!credentials) {
             setAuthMode('password');
@@ -228,7 +262,11 @@ function App() {
           console.warn('서버 세션 종료 실패:', error);
         });
       }
-      await Promise.all([clearAuthCredentials(), clearRememberedUserId(), clearBackgroundTimestamp()]);
+      await Promise.all([
+        clearAuthCredentials(),
+        clearRememberedUserId(),
+        clearBackgroundTimestamp(),
+      ]);
     })();
     setSavedUsrId('');
     setAuthMode('password');
@@ -237,7 +275,11 @@ function App() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
+    resetAuthExpiredState();
     void clearBackgroundTimestamp();
+    void loadCommonCodes().catch(error => {
+      console.error('공통코드 조회 실패:', error);
+    });
     setAuthMode('pin');
     setScreen('main');
     void loadMenus();
@@ -259,14 +301,15 @@ function App() {
       setPinSetupCredentials(null);
       setFirstPin('');
       setScreen('login');
-      Alert.alert('로그인 실패', error instanceof Error ? error.message : 'PIN 설정은 완료되었지만 로그인하지 못했습니다. PIN으로 다시 로그인해주세요.');
+      Alert.alert(getMsg('AUTH', '001'), error instanceof Error
+          ? error.message
+          : getMsg('SIGNUP', '004'),
+      );
     }
   };
 
   return (
-    <SafeAreaProvider>
-      <MsgProvider>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
           <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -289,16 +332,14 @@ function App() {
               <SignupScreen
                 onLogin={() => setScreen('login')}
                 onSignupComplete={(usrId, password) => {
-                  setPinSetupCredentials({usrId, password});
+                  setPinSetupCredentials({ usrId, password });
                   setFirstPin('');
                   setScreen('pinSetup');
                 }}
               />
             )}
 
-            {screen === 'recovery' && (
-              <AccountRecoveryScreen onBack={() => setScreen('login')} />
-            )}
+            {screen === 'recovery' && <AccountRecoveryScreen onBack={() => setScreen('login')} />}
 
             {(screen === 'pinSetup' || screen === 'pinConfirm') && pinSetupCredentials && (
               <PinSetupScreen
@@ -307,8 +348,13 @@ function App() {
                 password={pinSetupCredentials.password}
                 confirmation={screen === 'pinConfirm'}
                 firstPin={firstPin}
-                onNext={pin => {setFirstPin(pin); setScreen('pinConfirm');}}
-                onComplete={pin => {void completePinSetup(pin);}}
+                onNext={pin => {
+                  setFirstPin(pin);
+                  setScreen('pinConfirm');
+                }}
+                onComplete={pin => {
+                  void completePinSetup(pin);
+                }}
               />
             )}
 
@@ -348,9 +394,7 @@ function App() {
               </View>
             )}
           </KeyboardAvoidingView>
-        </SafeAreaView>
-      </MsgProvider>
-    </SafeAreaProvider>
+    </SafeAreaView>
   );
 }
 

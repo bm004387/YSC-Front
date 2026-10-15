@@ -245,7 +245,6 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
         getMsg('MYINFO', '001'),
         'MYINFO_001',
         'MYINFO:001',
-        '현재 비밀번호가 일치하지 않습니다.',
       ];
       if (currentPasswordMismatchMessages.includes(errorMessage)) {
         setCurrentPasswordStatus('invalid');
