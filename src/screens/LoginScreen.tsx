@@ -8,6 +8,7 @@ import {loginWithPassword, loginWithPin} from '../api/authApi';
 import {getMsgList} from '../api/msgApi';
 import {getMsg} from '../utils/msgUtil';
 import {getAuthCredentials, getRememberedUserId, saveAuthCredentials, saveRememberedUserId} from '../storage/tokenStorage';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface LoginScreenProps {
   authMode: 'pin' | 'password';
@@ -26,6 +27,7 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
   const [messages, setMessages] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const attemptedPin = useRef('');
 
   useEffect(() => {
@@ -36,10 +38,26 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
   }, [authMode, initialUsrId]);
 
   useEffect(() => {
-    void getRememberedUserId().then(value => {
-      if (!initialUsrId && value) setUsrId(value);
-    }).catch(e => console.warn('저장된 계정 아이디 조회 실패:', e));
-    void getMsgList().then(setMessages).catch(e => console.warn('메시지 조회 실패:', e));
+    let active = true;
+    setInitialLoading(true);
+    Promise.all([
+      getRememberedUserId()
+        .then(value => {
+          if (active && !initialUsrId && value) setUsrId(value);
+        })
+        .catch(e => console.warn('저장된 계정 아이디 조회 실패:', e)),
+      getMsgList()
+        .then(value => {
+          if (active) setMessages(value);
+        })
+        .catch(e => console.warn('메시지 조회 실패:', e)),
+    ]).finally(() => {
+      if (active) setInitialLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [initialUsrId]);
 
   useEffect(() => {
@@ -85,8 +103,10 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
       setLoading(false);
     }
   };
+  const isBusy = loading || initialLoading;
 
   return (
+    <>
     <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={false} bounces={false} alwaysBounceVertical={false} overScrollMode="never">
       <View style={[styles.content, styles.loginContent]}>
         <View style={styles.logoContainer}>
@@ -113,18 +133,18 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
           <>
             <Text style={loginStyles.account}>계정  {usrId}</Text>
             {error ? <Text style={loginStyles.pinError}>{error}</Text> : null}
-            <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={loading} />
+            <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={isBusy} />
           </>
         ) : (
           <>
-            <AppInput label="아이디" placeholder="아이디를 입력해주세요" value={usrId} onChangeText={setUsrId} autoCapitalize="none" autoCorrect={false} editable={!loading} />
-          <AppInput label="비밀번호" placeholder="비밀번호를 입력해주세요" value={password} onChangeText={setPassword} secureTextEntry editable={!loading} />
+            <AppInput label="아이디" placeholder="아이디를 입력해주세요" value={usrId} onChangeText={setUsrId} autoCapitalize="none" autoCorrect={false} editable={!isBusy} />
+          <AppInput label="비밀번호" placeholder="비밀번호를 입력해주세요" value={password} onChangeText={setPassword} secureTextEntry editable={!isBusy} />
           </>
         )}
 
         {authMode === 'password' && error ? <Text style={styles.errorText}>{error}</Text> : null}
         {authMode === 'password' ? (
-          <TouchableOpacity style={[styles.primaryButton, loading && loginStyles.disabled]} onPress={() => void submit()} disabled={loading}>
+          <TouchableOpacity style={[styles.primaryButton, isBusy && loginStyles.disabled]} onPress={() => void submit()} disabled={isBusy}>
             <Text style={styles.primaryButtonText}>{loading ? '확인 중…' : '로그인'}</Text>
           </TouchableOpacity>
         ) : null}
@@ -144,6 +164,8 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
         ) : null}
       </View>
     </ScrollView>
+    <BrandLoader visible={isBusy} />
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAllMenuList } from '../api/menuApi';
 import { AuthRequiredError, getRequiredAccessToken } from '../api/apiClient';
 import type { MenuItem } from '../api/menuApi';
@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../config/environment';
 import colors from '../styles/colors';
 import mainStyles from '../styles/main';
 import useMsg from '../hooks/useMsg';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface SettingsScreenProps {
   onMenuSelect: (item: MenuItem) => void;
@@ -56,7 +57,7 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
         <Text style={mainStyles.headerTitle}>전체메뉴</Text>
       </View>
       {loading ? (
-        <ActivityIndicator style={styles.loading} color="#3867D6" />
+        <BrandLoader mode="compact" visible />
       ) : error ? (
         <Pressable onPress={() => void loadMenus()} style={styles.statusArea}>
           <Text style={styles.statusText}>
@@ -126,7 +127,6 @@ function renderMenuIcon(icoFilSeq: number | null | undefined, accessToken: strin
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 },
   group: { marginBottom: 30 },
   groupHeading: {

@@ -3,6 +3,7 @@ import {Image, Pressable, Text, View} from 'react-native';
 import {API_BASE_URL} from '../../config/environment';
 import type {MenuItem} from '../../api/menuApi';
 import styles from '../../styles/bottomNavigation';
+import BrandLoader from './BrandLoader';
 import useMsg from '../../hooks/useMsg';
 
 interface BottomNavigationProps {
@@ -29,7 +30,7 @@ function BottomNavigation({
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text style={styles.message}>{getMsg('COMMON', '053')}</Text>
+        <BrandLoader mode="compact" visible />
       ) : error ? (
         <Pressable onPress={onRetry} style={styles.retryButton}>
           <Text style={styles.message}>{error}  {getMsg('COMMON', '044')}</Text>

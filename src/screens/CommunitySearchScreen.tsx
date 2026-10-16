@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -20,6 +19,7 @@ import styles from '../styles/community';
 import { API_BASE_URL } from '../config/environment';
 import useMsg from '../hooks/useMsg';
 import {getAvatarColor} from '../utils/avatarColor';
+import BrandLoader from '../components/common/BrandLoader';
 
 type SearchTab = 'posts' | 'users';
 type UserFilter = 'discover' | 'following' | 'followers';
@@ -208,7 +208,7 @@ function CommunitySearchScreen({
 
   const emptySearchResult = (emptyMessageCode: string) =>
     searchLoading ? (
-      <ActivityIndicator />
+      <BrandLoader mode="compact" visible />
     ) : (
       <Text style={styles.searchEmptyText}>
         {searchError ||

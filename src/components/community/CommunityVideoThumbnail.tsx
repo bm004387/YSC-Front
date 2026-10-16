@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Video, { VideoRef } from 'react-native-video';
 import styles from '../../styles/community';
 
@@ -24,6 +24,11 @@ function CommunityVideoThumbnail({ uri, token }: CommunityVideoThumbnailProps) {
         muted
         repeat={false}
         controls={false}
+        renderLoader={
+          <View style={styles.videoLoadingOverlay}>
+            <ActivityIndicator size="small" color="#fff" />
+          </View>
+        }
         playInBackground={false}
         playWhenInactive={false}
         onReadyForDisplay={() => {

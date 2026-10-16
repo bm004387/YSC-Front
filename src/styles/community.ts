@@ -251,6 +251,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   videoPlayer: { width: '100%', height: '100%' },
+  videoLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.18)',
+  },
   videoPlayerTouchArea: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
@@ -376,7 +382,6 @@ const styles = StyleSheet.create({
     color: '#20242d',
     marginBottom: 14,
   },
-  commentsLoading: { marginVertical: 18 },
   commentsHint: { fontSize: 13, color: '#858d99', paddingVertical: 12 },
   commentsError: { color: '#c43e4f', fontSize: 13, paddingVertical: 12 },
   commentRow: {

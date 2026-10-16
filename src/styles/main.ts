@@ -77,6 +77,23 @@ const mainStyles = StyleSheet.create({
     lineHeight: 21,
   },
 
+  loaderPreviewButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+  },
+
+  loaderPreviewButtonText: {
+    color: colors.gray900,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
   headerTitle: {
     fontSize: 16,
     fontWeight: '600',

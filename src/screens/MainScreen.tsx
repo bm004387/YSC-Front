@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 
 import {Alert, Pressable, Text, View} from 'react-native';
 import mainStyles from '../styles/main';
+import BrandLoader from '../components/common/BrandLoader';
 import {logout} from '../api/authApi';
 import {getMsgList} from '../api/msgApi';
 import {getMsg} from '../utils/msgUtil';
@@ -16,6 +17,9 @@ function MainScreen({
 }: MainScreenProps) {
 
   const [messages, setMessages] = useState<Record<string, string>>({});
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [showLoaderPreview, setShowLoaderPreview] = useState(false);
 
   /**
    * 메시지 조회
@@ -31,6 +35,8 @@ function MainScreen({
       setMessages(result);
     } catch (error) {
       console.error('메시지 조회 실패:',error);
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -58,6 +64,7 @@ function MainScreen({
    */
   const processLogout = async () => {
 
+    setLoggingOut(true);
     try {
 
       const credentials = await getAuthCredentials();
@@ -70,6 +77,7 @@ function MainScreen({
       console.error('로그아웃 실패:',error);
 
     } finally {
+      setLoggingOut(false);
       // 로컬 토큰 삭제
       await clearAuthCredentials();
 
@@ -117,7 +125,24 @@ function MainScreen({
             이용해보세요.
           </Text>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          style={mainStyles.loaderPreviewButton}
+          onPress={() => setShowLoaderPreview(true)}>
+          <Text style={mainStyles.loaderPreviewButtonText}>
+            로딩 애니메이션 보기
+          </Text>
+        </Pressable>
       </View>
+      <BrandLoader
+        visible={showLoaderPreview || messagesLoading || loggingOut}
+        delayMs={showLoaderPreview ? 0 : 500}
+        onClose={
+          messagesLoading || loggingOut
+            ? undefined
+            : () => setShowLoaderPreview(false)
+        }
+      />
     </View>
   );
 }

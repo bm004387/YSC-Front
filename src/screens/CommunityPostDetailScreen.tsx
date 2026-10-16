@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Dimensions,
   FlatList,
@@ -26,6 +25,7 @@ import useMsg from '../hooks/useMsg';
 import { API_BASE_URL } from '../config/environment';
 import { getAvatarColor } from '../utils/avatarColor';
 import { getCachedCommonCodeName } from '../utils/commonCodeUtil';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface CommunityPostDetailScreenProps {
   post: CommunityPost | null;
@@ -39,6 +39,7 @@ interface CommunityPostDetailScreenProps {
   onToast: (message: string) => void;
   currentUserId: string;
   showSaveAction?: boolean;
+  actionLoading?: boolean;
   singlePostOnly?: boolean;
   toastMessage?: string;
   toastOpacity: Animated.Value;
@@ -57,6 +58,7 @@ function CommunityPostDetailScreen({
   onToast,
   currentUserId,
   showSaveAction = true,
+  actionLoading = false,
   singlePostOnly = false,
   toastMessage = '',
   toastOpacity,
@@ -289,7 +291,7 @@ function CommunityPostDetailScreen({
             </View>
           ))}
           {previewLoading && previews.length === 0 && item.commentCount > 0 ? (
-            <ActivityIndicator style={styles.commentsLoading} size="small" />
+            <BrandLoader mode="compact" visible />
           ) : null}
           {previewError && item.commentCount > 0 ? (
             <Text style={styles.commentsError}>{previewError}</Text>
@@ -335,6 +337,9 @@ function CommunityPostDetailScreen({
             </Text>
             <View style={styles.detailHeaderSpacer} />
           </View>
+          {actionLoading ? (
+            <BrandLoader mode="compact" visible />
+          ) : null}
           <FlatList
             ref={detailListRef}
             style={styles.detailList}

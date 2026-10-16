@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -42,6 +41,7 @@ const emptyProfile: UserProfile = {
 };
 import { API_BASE_URL } from '../config/environment';
 import TextInput from '../components/common/NoAutofillTextInput';
+import BrandLoader from '../components/common/BrandLoader';
 
 function MyInfoScreen({ onBack }: MyInfoScreenProps) {
   const { getMsg } = useMsg();
@@ -410,7 +410,7 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
       </View>
 
       {loading ? (
-        <ActivityIndicator style={myInfoStyles.loader} color="#3867D6" />
+        <BrandLoader mode="compact" visible />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -733,6 +733,7 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
           <Text style={myInfoStyles.toastText}>{toastMessage}</Text>
         </Animated.View>
       ) : null}
+      <BrandLoader visible={saving || currentPasswordStatus === 'checking'} />
     </View>
   );
 }

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -16,6 +15,7 @@ import { API_BASE_URL } from '../config/environment';
 import {getAvatarColor} from '../utils/avatarColor';
 import useMsg from '../hooks/useMsg';
 import styles from '../styles/communityFollow';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface CommunityFollowListScreenProps {
   token: string;
@@ -224,7 +224,7 @@ function CommunityFollowListScreen({
       </View>
       {loading ? (
         <View style={styles.state}>
-          <ActivityIndicator />
+          <BrandLoader mode="compact" visible />
         </View>
       ) : error ? (
         <View style={styles.state}>
@@ -249,7 +249,7 @@ function CommunityFollowListScreen({
                 : getMsg('COMMUNITY', '040')}
             </Text>
           }
-          refreshing={loading}
+          refreshing={false}
           onRefresh={() => void loadUsers()}
         />
       )}

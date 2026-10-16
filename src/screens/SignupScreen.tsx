@@ -10,6 +10,7 @@ import commonStyles from '../styles/common';
 import useMsg from '../hooks/useMsg';
 import {checkUsrId, signup} from '../api/authApi';
 import {sendSms, verifySms} from '../api/msgApi';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface SignupScreenProps {
   onLogin: () => void;
@@ -40,6 +41,7 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
   const [isSmsSent, setIsSmsSent] = useState(false);
   const [isHpNoVerified, setIsHpNoVerified] = useState(false);
   const [smsError, setSmsError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const handleUsrIdChange = (value: string,) => {
     setUsrId(value);
@@ -56,12 +58,15 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
         return;
       }
       try {
+        setBusy(true);
         const result = await checkUsrId(usrId.trim());
         setIsUsrIdChecked(true);
         setIsUsrIdAvailable(result.available);
       } catch (e: any) {
         Alert.alert('알림',e?.message ?? getMsg('SIGNUP','004'),
         );
+      } finally {
+        setBusy(false);
       }
     };
 
@@ -131,6 +136,7 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
       }
 
       try {
+        setBusy(true);
         /*
          * 전화번호 + 인증번호
          * 둘 다 백엔드로 전달
@@ -152,6 +158,8 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
       } catch (e: any) {
         setIsHpNoVerified(false);
         setSmsError(e?.message ?? getMsg('SMS', '003'));
+      } finally {
+        setBusy(false);
       }
     };
 
@@ -184,6 +192,7 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
       }
 
       try {
+        setBusy(true);
         await signup(
                   usrId.trim(),
                   pwd,
@@ -197,6 +206,8 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
 
       } catch (e: any) {
         Alert.alert('알림', e?.message ?? getMsg('SIGNUP', '004'));
+      } finally {
+        setBusy(false);
       }
     };
 
@@ -310,10 +321,10 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
         <AppButton
           title="회원가입"
           onPress={handleSignup}
-          disabled={!isSignupEnabled}
+          disabled={!isSignupEnabled || busy || isSmsSending}
         />
       </ScrollView>
-
+      <BrandLoader visible={busy || isSmsSending} />
     </View>
   );
 };

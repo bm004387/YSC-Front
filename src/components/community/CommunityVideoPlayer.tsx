@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Video, { VideoRef } from 'react-native-video';
 import styles from '../../styles/community';
 
@@ -23,11 +23,15 @@ function CommunityVideoPlayer({
   const completedPlays = useRef(0);
   const [playing, setPlaying] = useState(autoPlay);
   const [exhausted, setExhausted] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [hasDisplayedFirstFrame, setHasDisplayedFirstFrame] = useState(false);
 
   useEffect(() => {
     completedPlays.current = 0;
     setExhausted(false);
     setPlaying(autoPlay);
+    setIsBuffering(false);
+    setHasDisplayedFirstFrame(false);
   }, [autoPlay, uri]);
 
   const handleEnd = () => {
@@ -68,11 +72,29 @@ function CommunityVideoPlayer({
         muted={!controls}
         repeat={false}
         controls={controls}
+        renderLoader={
+          <View style={styles.videoLoadingOverlay}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        }
         playInBackground={false}
         playWhenInactive={false}
         onEnd={handleEnd}
-        onError={() => setPlaying(false)}
+        onBuffer={({ isBuffering: buffering }) => setIsBuffering(buffering)}
+        onReadyForDisplay={() => {
+          setHasDisplayedFirstFrame(true);
+          setIsBuffering(false);
+        }}
+        onError={() => {
+          setPlaying(false);
+          setIsBuffering(false);
+        }}
       />
+      {hasDisplayedFirstFrame && isBuffering && (
+        <View pointerEvents="none" style={styles.videoLoadingOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
       {!controls && (
         <Pressable
           accessibilityRole="button"

@@ -20,6 +20,7 @@ import {
   isCachedCommonCodeValue,
 } from '../../utils/commonCodeUtil';
 import CommunityVideoPlayer from './CommunityVideoPlayer';
+import BrandLoader from '../common/BrandLoader';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -40,6 +41,7 @@ function CommunityPostComposerModal({
   const [caption, setCaption] = useState('');
   const [assets, setAssets] = useState<Asset[]>([]);
   const [posting, setPosting] = useState(false);
+  const [loadingMedia, setLoadingMedia] = useState(false);
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
 
   const chooseMedia = async (mediaType: 'photo' | 'video') => {
@@ -52,6 +54,7 @@ function CommunityPostComposerModal({
       return;
     }
 
+    setLoadingMedia(true);
     try {
       const result = await launchImageLibrary({
         mediaType,
@@ -86,6 +89,8 @@ function CommunityPostComposerModal({
         getMsg('COMMUNITY', '019'),
         error instanceof Error ? error.message : getMsg('COMMUNITY', '023'),
       );
+    } finally {
+      setLoadingMedia(false);
     }
   };
 
@@ -145,23 +150,38 @@ function CommunityPostComposerModal({
         visible={visible}
         transparent
         animationType="slide"
-        onRequestClose={onClose}
+        onRequestClose={() => {
+          if (!posting && !loadingMedia) onClose();
+        }}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalRoot}
         >
-          <Pressable style={styles.backdrop} onPress={onClose} />
+          <Pressable
+            style={styles.backdrop}
+            onPress={onClose}
+            disabled={posting || loadingMedia}
+          />
           <View style={styles.sheet}>
             <View style={styles.composerHeader}>
-              <Pressable onPress={onClose}>
+              <Pressable
+                onPress={onClose}
+                disabled={posting || loadingMedia}
+              >
                 <Text style={styles.cancel}>취소</Text>
               </Pressable>
               <Text style={styles.composerTitle}>새 게시물</Text>
-              <Pressable disabled={posting} onPress={() => void publish()}>
+              <Pressable
+                disabled={posting || loadingMedia}
+                onPress={() => void publish()}
+              >
                 <Text style={styles.share}>{posting ? '등록 중' : '공유'}</Text>
               </Pressable>
             </View>
+            {posting || loadingMedia ? (
+              <BrandLoader mode="compact" visible />
+            ) : null}
             <ScrollView
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.composerBody}
@@ -176,12 +196,14 @@ function CommunityPostComposerModal({
               />
               <View style={styles.pickers}>
                 <Pressable
+                  disabled={posting || loadingMedia}
                   onPress={() => void chooseMedia('photo')}
                   style={styles.picker}
                 >
                   <Text>▧ 사진 선택</Text>
                 </Pressable>
                 <Pressable
+                  disabled={posting || loadingMedia}
                   onPress={() => void chooseMedia('video')}
                   style={styles.picker}
                 >

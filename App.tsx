@@ -15,6 +15,7 @@ import MyInfoScreen from './src/screens/MyInfoScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import CommunityScreen from './src/screens/CommunityScreen';
 import BottomNavigation from './src/components/common/BottomNavigation';
+import BrandLoader from './src/components/common/BrandLoader';
 import { getBottomMenuList } from './src/api/menuApi';
 import { loginWithPin, logout, validateSession } from './src/api/authApi';
 import {
@@ -254,30 +255,36 @@ function AppContent() {
   };
 
   const handleLogout = useCallback(() => {
+    setScreen('loading');
     void (async () => {
-      const credentials = await getAuthCredentials();
-      if (credentials) {
-        try {
-          const pushToken = await getToken(getMessaging());
-          await unregisterPushToken(credentials.password, pushToken);
-        } catch (error) {
-          console.warn('푸시 토큰 해제 실패:', error);
+      try {
+        const credentials = await getAuthCredentials();
+        if (credentials) {
+          try {
+            const pushToken = await getToken(getMessaging());
+            await unregisterPushToken(credentials.password, pushToken);
+          } catch (error) {
+            console.warn('푸시 토큰 해제 실패:', error);
+          }
+          await logout(credentials.password).catch(error => {
+            console.warn('서버 세션 종료 실패:', error);
+          });
         }
-        await logout(credentials.password).catch(error => {
-          console.warn('서버 세션 종료 실패:', error);
-        });
+      } catch (error) {
+        console.warn('로그아웃 준비 실패:', error);
+      } finally {
+        await Promise.allSettled([
+          clearAuthCredentials(),
+          clearRememberedUserId(),
+          clearBackgroundTimestamp(),
+        ]);
+        setSavedUsrId('');
+        setAuthMode('password');
+        setMenuItems([]);
+        setMenuAccessToken('');
+        setScreen('login');
       }
-      await Promise.all([
-        clearAuthCredentials(),
-        clearRememberedUserId(),
-        clearBackgroundTimestamp(),
-      ]);
     })();
-    setSavedUsrId('');
-    setAuthMode('password');
-    setMenuItems([]);
-    setMenuAccessToken('');
-    setScreen('login');
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
@@ -293,6 +300,7 @@ function AppContent() {
 
   const completePinSetup = async (pin: string) => {
     if (!pinSetupCredentials) return;
+    setScreen('loading');
     try {
       const response = await loginWithPin(pinSetupCredentials.usrId, pin);
       await saveAuthCredentials(response.user.usrId, response.accessToken);
@@ -401,6 +409,7 @@ function AppContent() {
               </View>
             )}
           </KeyboardAvoidingView>
+          <BrandLoader visible={screen === 'loading'} />
     </SafeAreaView>
   );
 }

@@ -6,6 +6,7 @@ import {setupPin} from '../api/authApi';
 import {saveRememberedUserId} from '../storage/tokenStorage';
 import useMsg from '../hooks/useMsg';
 import pinSetupStyles from '../styles/pinSetup';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface PinSetupScreenProps {
   usrId: string;
@@ -54,14 +55,16 @@ function PinSetupScreen({usrId, password, confirmation, firstPin = '', onNext, o
   }, [confirmation, firstPin, getMsg, onComplete, onNext, password, pin, usrId]);
 
   return (
+    <>
     <View style={[commonStyles.safeArea, pinSetupStyles.screen]}>
       <Text style={pinSetupStyles.back} onPress={() => !confirmation && setPin('')}>YSC</Text>
       <Text style={pinSetupStyles.title}>{confirmation ? 'PIN 번호 확인' : 'PIN 번호 설정'}</Text>
       <Text style={pinSetupStyles.subtitle}>{confirmation ? '한 번 더 입력해주세요.' : '앞으로 사용할 숫자 4자리를 입력해주세요.'}</Text>
       <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={saving} />
       {error ? <Text style={commonStyles.errorText}>{error}</Text> : null}
-      {saving ? <Text style={pinSetupStyles.status}>PIN을 저장하고 있습니다…</Text> : null}
     </View>
+    <BrandLoader visible={saving} />
+    </>
   );
 }
 

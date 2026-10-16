@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Alert,
   FlatList,
@@ -43,6 +42,7 @@ import { API_BASE_URL } from '../config/environment';
 import { getCachedCommonCodeName } from '../utils/commonCodeUtil';
 import { getAvatarColor } from '../utils/avatarColor';
 import { showLocalMessageNotification } from '../utils/localNotificationUtil';
+import BrandLoader from '../components/common/BrandLoader';
 type CommunityView =
   | 'feed'
   | 'mine'
@@ -80,6 +80,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
     new Set(),
   );
   const [loading, setLoading] = useState(true);
+  const [actionLoadingCount, setActionLoadingCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [composerVisible, setComposerVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
@@ -144,6 +145,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
   const showTestMessageNotification = async () => {
     if (!profileUser) return;
     const message = getMsg('COMMUNITY', '053');
+    setActionLoadingCount(count => count + 1);
     try {
       await showLocalMessageNotification({
         userId: profileUser.usrId,
@@ -164,6 +166,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         detail,
       );
       showToast(detail);
+    } finally {
+      setActionLoadingCount(count => Math.max(0, count - 1));
     }
   };
 
@@ -202,6 +206,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
   const loadProfileSummary = useCallback(
     async (authToken = token) => {
       if (!authToken) return;
+      setActionLoadingCount(count => count + 1);
       try {
         const [summary, profile] = await Promise.all([
           getCommunityProfileSummary(authToken),
@@ -216,6 +221,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         }
       } catch (e) {
         console.warn('커뮤니티 프로필 통계 조회 실패', e);
+      } finally {
+        setActionLoadingCount(count => Math.max(0, count - 1));
       }
     },
     [myId, token],
@@ -334,6 +341,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           }
         : current,
     );
+    setActionLoadingCount(count => count + 1);
     try {
       await setCommunityFollow(token, userId, enabled);
       showToast(getMsg('COMMUNITY', enabled ? '003' : '004'));
@@ -357,6 +365,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         e instanceof Error ? e.message : getMsg('COMMUNITY', '023'),
       );
       return false;
+    } finally {
+      setActionLoadingCount(count => Math.max(0, count - 1));
     }
   };
 
@@ -375,6 +385,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
   };
 
   const removeFollower = async (userId: string): Promise<boolean> => {
+    setActionLoadingCount(count => count + 1);
     try {
       await removeCommunityFollower(token, userId);
       return true;
@@ -384,6 +395,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         e instanceof Error ? e.message : getMsg('COMMUNITY', '023'),
       );
       return false;
+    } finally {
+      setActionLoadingCount(count => Math.max(0, count - 1));
     }
   };
 
@@ -504,6 +517,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         : {}),
     });
     updatePost(post.postSeq, current => adjustCount(current, next));
+    setActionLoadingCount(count => count + 1);
     try {
       await setCommunityReaction(token, post.postSeq, kind, next);
       if (kind === 'save') {
@@ -520,6 +534,8 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         getMsg('COMMUNITY', '006'),
         e instanceof Error ? e.message : getMsg('COMMON', '022'),
       );
+    } finally {
+      setActionLoadingCount(count => Math.max(0, count - 1));
     }
   };
 
@@ -891,9 +907,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           onPostToggle={(post, kind) => void toggleReaction(post, kind)}
         />
       ) : loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator />
-        </View>
+        <View style={styles.center} />
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.empty}>{error}</Text>
@@ -940,7 +954,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
                 )
           }
           onRefresh={refresh}
-          refreshing={loading}
+          refreshing={false}
           viewabilityConfigCallbackPairs={feedViewabilityPairs}
           ListEmptyComponent={
             <Text style={styles.empty}>
@@ -984,6 +998,7 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
         currentUserId={myId}
         onAuthorPress={openAuthorProfile}
         showSaveAction={communityView !== 'saved'}
+        actionLoading={actionLoadingCount > 0}
         singlePostOnly={communityView === 'saved'}
         toastMessage={toastMessage}
         toastOpacity={toastOpacity}
@@ -1015,6 +1030,9 @@ function CommunityScreen({ onBack }: CommunityScreenProps) {
           <Text style={styles.toastText}>{toastMessage}</Text>
         </Animated.View>
       ) : null}
+      <BrandLoader
+        visible={loading || (actionLoadingCount > 0 && !selectedPost)}
+      />
     </View>
   );
 }

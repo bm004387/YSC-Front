@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -27,6 +26,7 @@ import useMsg from '../../hooks/useMsg';
 
 import { API_BASE_URL } from '../../config/environment';
 import {getAvatarColor} from '../../utils/avatarColor';
+import BrandLoader from '../common/BrandLoader';
 
 interface CommunityCommentsModalProps {
   post: CommunityPost | null;
@@ -280,6 +280,9 @@ function CommunityCommentsModal({
               <Text style={styles.commentsModalCloseText}>닫기</Text>
             </Pressable>
           </View>
+          {submitting || updatingComment || deletingCommentId !== null ? (
+            <BrandLoader mode="compact" visible />
+          ) : null}
           {error ? (
             <Pressable
               onPress={() => setReloadKey(key => key + 1)}
@@ -289,7 +292,7 @@ function CommunityCommentsModal({
             </Pressable>
           ) : null}
           {loading ? (
-            <ActivityIndicator style={styles.commentsLoading} />
+            <BrandLoader mode="compact" visible />
           ) : (
             <FlatList
               style={styles.commentsModalListView}

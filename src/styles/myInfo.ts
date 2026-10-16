@@ -165,9 +165,6 @@ const myInfoStyles = StyleSheet.create({
   messageSuccess: {
     color: '#188038',
   },
-  loader: {
-    flex: 1,
-  },
   section: {
     marginBottom: 26,
   },

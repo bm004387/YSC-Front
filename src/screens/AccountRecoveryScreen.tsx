@@ -6,6 +6,7 @@ import {findAccountId, resetPassword, sendIdRecoveryCode, sendPasswordRecoveryCo
 import commonStyles from '../styles/common';
 import recoveryStyles from '../styles/accountRecovery';
 import useMsg from '../hooks/useMsg';
+import BrandLoader from '../components/common/BrandLoader';
 
 interface AccountRecoveryScreenProps {
   onBack: () => void;
@@ -197,6 +198,7 @@ function AccountRecoveryScreen({onBack}: AccountRecoveryScreenProps) {
           </View>
         )}
       </ScrollView>
+      <BrandLoader visible={busy || isSending} />
     </View>
   );
 }
