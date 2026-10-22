@@ -21,7 +21,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: windowScene)
 
         appDelegate.reactNativeFactory?.startReactNative(
-            withModuleName: "YSC",
+            withModuleName: "Moa",
             in: window,
             launchOptions: nil
         )

@@ -20,9 +20,8 @@ const mainStyles = StyleSheet.create({
   },
 
   logo: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.black,
+    width: 42,
+    height: 42,
   },
 
   menuButton: {

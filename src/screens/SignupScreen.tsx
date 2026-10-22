@@ -232,7 +232,7 @@ const SignupScreen = ({onLogin, onSignupComplete}: SignupScreenProps) => {
         </Text>
         <Text
           style={commonStyles.subtitle}>
-          YSC 서비스 이용을 위해
+          한끼모아 서비스 이용을 위해
           회원정보를 입력해주세요.
         </Text>
 

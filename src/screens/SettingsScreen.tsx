@@ -53,7 +53,12 @@ function SettingsScreen({ onMenuSelect }: SettingsScreenProps) {
   return (
     <View style={mainStyles.container}>
       <View style={mainStyles.header}>
-        <Text style={mainStyles.logo}>YSC</Text>
+        <Image
+          source={require('../../assets/brand/recipe-logo-transparent.png')}
+          style={mainStyles.logo}
+          resizeMode="contain"
+          accessibilityLabel="레시피 로고"
+        />
         <Text style={mainStyles.headerTitle}>전체메뉴</Text>
       </View>
       {loading ? (

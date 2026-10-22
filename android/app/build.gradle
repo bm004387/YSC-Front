@@ -58,6 +58,12 @@ react {
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
 def enableProguardInReleaseBuilds = false
+def releaseStoreFile = System.getenv("MOA_ANDROID_RELEASE_STORE_FILE")
+def releaseStorePassword = System.getenv("MOA_ANDROID_RELEASE_STORE_PASSWORD")
+def releaseKeyAlias = System.getenv("MOA_ANDROID_RELEASE_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("MOA_ANDROID_RELEASE_KEY_PASSWORD")
+def releaseSigningConfigured = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword]
+        .every { value -> value != null && !value.isBlank() }
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -77,9 +83,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.myapp"
+    namespace "com.buc.moa"
     defaultConfig {
-        applicationId "com.myapp"
+        applicationId "com.buc.moa"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -92,18 +98,44 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (releaseSigningConfigured) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Release never falls back to the public, shared Android debug key.
+            signingConfig releaseSigningConfigured ? signingConfigs.release : null
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+    }
+}
+
+tasks.register("verifyAndroidReleaseSigning") {
+    doLast {
+        if (!releaseSigningConfigured) {
+            throw new GradleException(
+                    "Release signing is not configured. Set MOA_ANDROID_RELEASE_STORE_FILE, " +
+                    "MOA_ANDROID_RELEASE_STORE_PASSWORD, MOA_ANDROID_RELEASE_KEY_ALIAS, and " +
+                    "MOA_ANDROID_RELEASE_KEY_PASSWORD in the local build environment.")
+        }
+    }
+}
+
+tasks.configureEach { task ->
+    def taskName = task.name.toLowerCase(Locale.ROOT)
+    if ((taskName.startsWith("assemble") || taskName.startsWith("bundle") || taskName.startsWith("package"))
+            && taskName.contains("release")) {
+        task.dependsOn("verifyAndroidReleaseSigning")
     }
 }
 

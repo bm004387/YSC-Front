@@ -11,9 +11,10 @@ import { CommunityPost } from '../../api/communityApi';
 import styles from '../../styles/community';
 
 import { API_BASE_URL } from '../../config/environment';
-import {getCachedCommonCodeName} from '../../utils/commonCodeUtil';
-import {getAvatarColor} from '../../utils/avatarColor';
+import { getCachedCommonCodeName } from '../../utils/commonCodeUtil';
+import { getAvatarColor } from '../../utils/avatarColor';
 import CommunityVideoPlayer from './CommunityVideoPlayer';
+import CommunityZoomImage from './CommunityZoomImage';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
@@ -24,6 +25,7 @@ interface CommunityPostCardProps {
   onAuthorPress?: (userId: string) => void;
   showSaveAction?: boolean;
   autoPlay?: boolean;
+  enableImageZoom?: boolean;
 }
 
 function CommunityPostCard({
@@ -35,6 +37,7 @@ function CommunityPostCard({
   onAuthorPress,
   showSaveAction = true,
   autoPlay = false,
+  enableImageZoom = false,
 }: CommunityPostCardProps) {
   const mediaItems = post.media ?? [];
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
@@ -61,7 +64,12 @@ function CommunityPostCard({
           onPress={() => onAuthorPress?.(post.authorId)}
           style={styles.postAuthorPressable}
         >
-          <View style={[styles.avatar, {backgroundColor: getAvatarColor(post.authorId)}]}>
+          <View
+            style={[
+              styles.avatar,
+              { backgroundColor: getAvatarColor(post.authorId) },
+            ]}
+          >
             {post.profileImageFilSeq ? (
               <Image
                 source={{
@@ -77,9 +85,7 @@ function CommunityPostCard({
             )}
           </View>
           <View style={styles.author}>
-            <Text style={styles.authorName}>
-              {post.authorName || '사용자'}
-            </Text>
+            <Text style={styles.authorName}>{post.authorName || '사용자'}</Text>
           </View>
         </Pressable>
         <Text style={styles.more}>···</Text>
@@ -93,6 +99,7 @@ function CommunityPostCard({
             horizontal
             pagingEnabled
             nestedScrollEnabled
+            pinchGestureEnabled={false}
             showsHorizontalScrollIndicator={false}
             style={styles.mediaGallery}
             scrollEventThrottle={16}
@@ -105,34 +112,39 @@ function CommunityPostCard({
           >
             {mediaItems.map((media, index) => {
               const uri = `${API_BASE_URL}/api/community/files/${media.filSeq}`;
-              const isImage = media.mediaType ===
+              const isImage =
+                media.mediaType ===
                 (getCachedCommonCodeName('MEDIA_TYP', '001') ?? 'IMAGE');
 
               return (
-                <View
-                  key={media.filSeq}
-                  style={styles.mediaFrame}
-                >
+                <View key={media.filSeq} style={styles.mediaFrame}>
                   {isImage ? (
-                    <Pressable
-                      style={styles.mediaFrameContent}
-                      onPress={() => onOpen(post)}
-                    >
-                      <Image
-                        source={{
-                          uri,
-                          headers: { Authorization: `Bearer ${token}` },
-                        }}
-                        style={styles.image}
-                        resizeMode="cover"
+                    enableImageZoom ? (
+                      <CommunityZoomImage
+                        uri={uri}
+                        headers={{ Authorization: `Bearer ${token}` }}
+                        accessibilityLabel={`${
+                          post.authorName || '사용자'
+                        } 게시물 사진. 두 손가락으로 확대할 수 있습니다.`}
+                        style={styles.mediaFrameContent}
                       />
-                    </Pressable>
+                    ) : (
+                      <Pressable
+                        style={styles.mediaFrameContent}
+                        onPress={() => onOpen(post)}
+                      >
+                        <Image
+                          source={{
+                            uri,
+                            headers: { Authorization: `Bearer ${token}` },
+                          }}
+                          style={styles.image}
+                          resizeMode="cover"
+                        />
+                      </Pressable>
+                    )
                   ) : autoPlay && index === activeMediaIndex ? (
-                    <CommunityVideoPlayer
-                      uri={uri}
-                      token={token}
-                      autoPlay
-                    />
+                    <CommunityVideoPlayer uri={uri} token={token} autoPlay />
                   ) : (
                     <View style={styles.videoPreview}>
                       <Text style={styles.videoPlayGlyph}>▶</Text>

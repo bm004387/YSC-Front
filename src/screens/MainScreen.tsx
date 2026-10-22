@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 
-import {Alert, Pressable, Text, View} from 'react-native';
+import {Alert, Image, Pressable, Text, View} from 'react-native';
 import mainStyles from '../styles/main';
 import BrandLoader from '../components/common/BrandLoader';
 import {logout} from '../api/authApi';
@@ -98,9 +98,12 @@ function MainScreen({
 
       {/* Header */}
       <View style={mainStyles.header}>
-        <Text style={mainStyles.logo}>
-          YSC
-        </Text>
+        <Image
+          source={require('../../assets/brand/recipe-logo-transparent.png')}
+          style={mainStyles.logo}
+          resizeMode="contain"
+          accessibilityLabel="레시피 로고"
+        />
         <Pressable style={mainStyles.menuButton} onPress={handleLogout}>
           <Text style={mainStyles.menuButtonText}>
             로그아웃
@@ -114,11 +117,11 @@ function MainScreen({
           안녕하세요 👋
         </Text>
         <Text style={mainStyles.subtitle}>
-          YSC 서비스에 오신 것을 환영합니다.
+          한끼모아에 오신 것을 환영합니다.
         </Text>
         <View style={mainStyles.welcomeCard}>
           <Text style={mainStyles.cardTitle}>
-            YSC 서비스
+            한끼모아
           </Text>
           <Text style={mainStyles.cardText}>
             메뉴를 선택해서 원하는 서비스를

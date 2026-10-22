@@ -124,6 +124,9 @@ function CommunityPostDetailScreen({
       ? posts.map(item => (item.postSeq === post.postSeq ? post : item))
       : [post, ...posts]
     : [];
+  const selectedPostIndex = post
+    ? detailPosts.findIndex(item => item.postSeq === post.postSeq)
+    : -1;
   const postSeqKey = detailPosts.map(item => item.postSeq).join(',');
   const lastPostSeq = detailPosts[detailPosts.length - 1]?.postSeq;
   const footerHeight = Math.max(
@@ -136,21 +139,16 @@ function CommunityPostDetailScreen({
   }, [postSeqKey]);
 
   useEffect(() => {
-    if (!post) return;
-
-    const selectedIndex = detailPosts.findIndex(
-      item => item.postSeq === post.postSeq,
-    );
-    if (selectedIndex < 0) return;
+    if (selectedPostIndex < 0) return;
 
     const scrollToSelectedPost = () => {
-      if (selectedIndex === 0) {
+      if (selectedPostIndex === 0) {
         detailListRef.current?.scrollToOffset({ offset: 0, animated: false });
         return;
       }
 
       detailListRef.current?.scrollToIndex({
-        index: selectedIndex,
+        index: selectedPostIndex,
         animated: false,
         viewPosition: 0,
       });
@@ -163,7 +161,7 @@ function CommunityPostDetailScreen({
       cancelAnimationFrame(firstFrame);
       clearTimeout(retryTimer);
     };
-  }, [post?.postSeq, postSeqKey]);
+  }, [selectedPostIndex, postSeqKey]);
 
   useEffect(() => {
     const postSeqs = postSeqKey
@@ -238,6 +236,7 @@ function CommunityPostDetailScreen({
           onToggle={onToggle}
           onAuthorPress={onAuthorPress}
           showSaveAction={showSaveAction}
+          enableImageZoom
         />
         <View style={styles.commentPreviewBlock}>
           {previews.map(comment => (
@@ -337,12 +336,11 @@ function CommunityPostDetailScreen({
             </Text>
             <View style={styles.detailHeaderSpacer} />
           </View>
-          {actionLoading ? (
-            <BrandLoader mode="compact" visible />
-          ) : null}
+          {actionLoading ? <BrandLoader mode="compact" visible /> : null}
           <FlatList
             ref={detailListRef}
             style={styles.detailList}
+            pinchGestureEnabled={false}
             onLayout={({ nativeEvent }) =>
               setDetailListHeight(nativeEvent.layout.height)
             }

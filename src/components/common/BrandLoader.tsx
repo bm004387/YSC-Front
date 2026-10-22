@@ -28,6 +28,7 @@ function BrandLoader({
   const [displayVisible, setDisplayVisible] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
+  const float = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!visible) {
@@ -52,6 +53,7 @@ function BrandLoader({
 
     progress.setValue(0);
     pulse.setValue(0);
+    float.setValue(0);
 
     const progressAnimation = Animated.loop(
       Animated.timing(progress, {
@@ -77,15 +79,33 @@ function BrandLoader({
         }),
       ]),
     );
+    const floatAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(float, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(float, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
 
     progressAnimation.start();
     logoAnimation.start();
+    floatAnimation.start();
 
     return () => {
       progressAnimation.stop();
       logoAnimation.stop();
+      floatAnimation.stop();
     };
-  }, [displayVisible, mode, progress, pulse]);
+  }, [displayVisible, float, mode, progress, pulse]);
 
   const translateX = progress.interpolate({
     inputRange: [0, 1],
@@ -99,18 +119,22 @@ function BrandLoader({
     inputRange: [0, 1],
     outputRange: [0.72, 1],
   });
+  const logoTranslateY = float.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -4],
+  });
 
   const logo = (
     <Animated.View
       style={[
         mode === 'compact' ? styles.compactLogoFrame : styles.logoFrame,
-        {opacity: logoOpacity, transform: [{scale: logoScale}]},
+        {opacity: logoOpacity, transform: [{translateY: logoTranslateY}, {scale: logoScale}]},
       ]}>
       <Animated.Image
-        source={require('../../../assets/brand/ysc-y-transparent.png')}
+        source={require('../../../assets/brand/recipe-logo-transparent.png')}
         style={mode === 'compact' ? styles.compactLogo : styles.logo}
         resizeMode="contain"
-        accessibilityLabel="YSC 로고"
+        accessibilityLabel="레시피 로고"
       />
     </Animated.View>
   );

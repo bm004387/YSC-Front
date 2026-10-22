@@ -36,7 +36,7 @@ export default function usePushNotifications(enabled: boolean): void {
     }
     if (getApps().length === 0) {
       console.warn(
-        '[Push] Firebase가 초기화되지 않았습니다. iOS target에 GoogleService-Info.plist를 추가해야 토큰을 등록할 수 있습니다.',
+        '[Push] Firebase 앱 구성이 없어 푸시 토큰 등록을 건너뜁니다. 플랫폼별 Firebase 설정 파일을 추가해야 합니다.',
       );
       return;
     }
@@ -61,7 +61,7 @@ export default function usePushNotifications(enabled: boolean): void {
       }
 
       if (Platform.OS === 'android' && notifee) {
-        await notifee.createChannel({id: 'default', name: 'YSC notifications'});
+        await notifee.createChannel({id: 'default', name: '한끼모아 알림'});
       }
       await registerCurrentToken();
     };
@@ -74,7 +74,7 @@ export default function usePushNotifications(enabled: boolean): void {
     const unsubscribeForeground = onMessage(messaging, async message => {
       if (!message.notification || !notifee) return;
       const androidChannelId = Platform.OS === 'android'
-        ? await notifee.createChannel({id: 'default', name: 'YSC notifications'})
+        ? await notifee.createChannel({id: 'default', name: '한끼모아 알림'})
         : undefined;
       await notifee.displayNotification({
         title: message.notification.title,

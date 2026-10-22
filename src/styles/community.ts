@@ -103,7 +103,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   profilePostsInfo: { height: 94 },
-  myPostsNickname: { fontSize: 13, fontWeight: '700', color: '#20242d', marginBottom: 7 },
+  myPostsNickname: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#20242d',
+    marginBottom: 7,
+  },
   myPostsStats: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   myPostsPostStat: { width: 68, alignItems: 'flex-start' },
   myPostsRelationStat: { flex: 1, alignItems: 'center' },
@@ -225,6 +230,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   mediaFrameContent: { flex: 1 },
+  zoomImageViewport: {
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: '#101216',
+  },
+  zoomImage: { width: '100%', height: '100%' },
   mediaGalleryContainer: { position: 'relative' },
   mediaGallery: { width: '100%' },
   image: { width: '100%', height: '100%' },
@@ -810,7 +821,11 @@ const styles = StyleSheet.create({
   profileFollowingButton: { backgroundColor: '#eef0f3' },
   profileFollowText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   profileFollowingText: { color: '#3f4650' },
-  profileActionsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  profileActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
   profileMessageButton: {
     minWidth: 74,
     height: 32,
@@ -823,7 +838,11 @@ const styles = StyleSheet.create({
     borderColor: '#d9dde4',
     backgroundColor: '#fff',
   },
-  profileMessageButtonText: { color: '#303744', fontSize: 11, fontWeight: '700' },
+  profileMessageButtonText: {
+    color: '#303744',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   profileActionSpacer: { flex: 1 },
   notice: {
     fontSize: 11,

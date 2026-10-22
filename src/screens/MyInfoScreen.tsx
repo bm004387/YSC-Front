@@ -440,7 +440,7 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
                   ) : (
                     <View style={myInfoStyles.profileImage}>
                       <Text style={myInfoStyles.profileText}>
-                        {profile.usrNm.slice(0, 1) || 'Y'}
+                        {profile.usrNm.slice(0, 1) || '한'}
                       </Text>
                     </View>
                   )}
@@ -456,7 +456,7 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
                 </View>
                 <View style={myInfoStyles.profileIdentity}>
                   <Text style={myInfoStyles.profileName} numberOfLines={1}>
-                    {profile.usrNm || profile.usrId || 'YSC'}
+                    {profile.usrNm || profile.usrId || '한끼모아'}
                   </Text>
                   <Text style={myInfoStyles.profileId} numberOfLines={1}>
                     {profile.usrId}

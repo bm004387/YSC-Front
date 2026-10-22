@@ -1,8 +1,8 @@
 import * as Keychain from 'react-native-keychain';
 
-export const AUTH_SERVICE = 'ysc-auth';
-export const REMEMBER_ID_SERVICE = 'ysc-remember-id';
-export const APP_STATE_SERVICE = 'ysc-app-state';
+export const AUTH_SERVICE = 'moa-auth';
+export const REMEMBER_ID_SERVICE = 'moa-remember-id';
+export const APP_STATE_SERVICE = 'moa-app-state';
 
 export function getAuthCredentials() {
   return Keychain.getGenericPassword({service: AUTH_SERVICE});

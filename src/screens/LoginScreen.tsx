@@ -110,7 +110,7 @@ function LoginScreen({authMode, initialUsrId = '', onSignup, onUsePassword, onRe
     <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={false} bounces={false} alwaysBounceVertical={false} overScrollMode="never">
       <View style={[styles.content, styles.loginContent]}>
         <View style={styles.logoContainer}>
-          <Image source={require('../../assets/brand/ysc-y-transparent.png')} style={styles.loginLogo} resizeMode="contain" accessibilityLabel="YSC 로고" />
+          <Image source={require('../../assets/brand/recipe-logo-transparent.png')} style={styles.loginLogo} resizeMode="contain" accessibilityLabel="레시피 로고" />
         </View>
         <Text
           style={[

@@ -57,7 +57,7 @@ function PinSetupScreen({usrId, password, confirmation, firstPin = '', onNext, o
   return (
     <>
     <View style={[commonStyles.safeArea, pinSetupStyles.screen]}>
-      <Text style={pinSetupStyles.back} onPress={() => !confirmation && setPin('')}>YSC</Text>
+      <Text style={pinSetupStyles.back} onPress={() => !confirmation && setPin('')}>한끼모아</Text>
       <Text style={pinSetupStyles.title}>{confirmation ? 'PIN 번호 확인' : 'PIN 번호 설정'}</Text>
       <Text style={pinSetupStyles.subtitle}>{confirmation ? '한 번 더 입력해주세요.' : '앞으로 사용할 숫자 4자리를 입력해주세요.'}</Text>
       <PinPad value={pin} onChange={value => {setPin(value); setError('');}} disabled={saving} />
