@@ -403,7 +403,12 @@ function MyInfoScreen({ onBack }: MyInfoScreenProps) {
   return (
     <View style={myInfoStyles.container}>
       <View style={myInfoStyles.header}>
-        <Pressable style={myInfoStyles.backButton} onPress={onBack}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="뒤로가기"
+          style={myInfoStyles.backButton}
+          onPress={onBack}
+        >
           <Text style={myInfoStyles.backButtonText}>‹</Text>
         </Pressable>
         <Text style={myInfoStyles.headerTitle}>내 정보</Text>

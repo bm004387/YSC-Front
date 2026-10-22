@@ -67,6 +67,7 @@ yarn-error.log
 /vendor/bundle/
 
 # Firebase app configuration must match the registered MOA application IDs.
+ios/GoogleService-Info.plist
 ios/MOA/GoogleService-Info.plist
 android/app/google-services.json
 

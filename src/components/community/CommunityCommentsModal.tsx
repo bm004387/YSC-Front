@@ -10,7 +10,7 @@ import {
   View,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeAreaView } from '../common/AppSafeArea';
 import {
   addCommunityComment,
   CommunityComment,
@@ -267,7 +267,7 @@ function CommunityCommentsModal({
         style={styles.commentsModalSheet}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <SafeAreaView style={styles.commentsModalContent} edges={['bottom']}>
+        <AppSafeAreaView style={styles.commentsModalContent} edges={['bottom']}>
           <View style={styles.commentsModalHeader}>
             <Text style={styles.commentsModalTitle}>
               댓글 {loading ? post.commentCount : activeCommentCount}
@@ -505,7 +505,7 @@ function CommunityCommentsModal({
               </Pressable>
             </View>
           </View>
-        </SafeAreaView>
+        </AppSafeAreaView>
       </KeyboardAvoidingView>
       {toastMessage ? (
         <Animated.View

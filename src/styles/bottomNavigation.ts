@@ -3,7 +3,7 @@ import colors from './colors';
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 68,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'stretch',
     backgroundColor: colors.white,
@@ -12,10 +12,10 @@ const styles = StyleSheet.create({
   },
   item: {
     flex: 1,
-    minHeight: 68,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
   },
   icon: {
     fontSize: 21,

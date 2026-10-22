@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Modal, Text, TouchableOpacity, View} from 'react-native';
 
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import { AppSafeAreaProvider, AppSafeAreaView } from '../common/AppSafeArea';
 import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import commonStyles from '../../styles/common';
 
@@ -117,8 +117,8 @@ const AddressSearchModal = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}>
 
-      <SafeAreaProvider>
-        <SafeAreaView
+      <AppSafeAreaProvider>
+        <AppSafeAreaView
           style={{flex: 1, backgroundColor: '#FFFFFF'}}
           edges={['top', 'bottom']}>
 
@@ -174,8 +174,8 @@ const AddressSearchModal = ({
               style={{flex: 1,width: '100%'}}
             />
           </View>
-        </SafeAreaView>
-      </SafeAreaProvider>
+        </AppSafeAreaView>
+      </AppSafeAreaProvider>
     </Modal>
   );
 };

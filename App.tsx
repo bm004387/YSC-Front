@@ -2,7 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import { Alert, AppState, KeyboardAvoidingView, Platform, View } from 'react-native';
 
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeAreaProvider, AppSafeAreaView } from './src/components/common/AppSafeArea';
 
 import styles from './src/styles/common';
 
@@ -72,11 +72,11 @@ function isAppRoute(route: string | null): route is AppRoute {
 
 function App() {
   return (
-    <SafeAreaProvider>
+    <AppSafeAreaProvider>
       <MsgProvider>
         <AppContent />
       </MsgProvider>
-    </SafeAreaProvider>
+    </AppSafeAreaProvider>
   );
 }
 
@@ -323,7 +323,7 @@ function AppContent() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <AppSafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
           <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -410,7 +410,7 @@ function AppContent() {
             )}
           </KeyboardAvoidingView>
           <BrandLoader visible={screen === 'loading'} />
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 }
 

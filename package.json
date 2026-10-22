@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --scheme MOA",
     "lint": "eslint .",
     "start": "react-native start --reset-cache",
     "postinstall": "node scripts/patch-image-picker-filename.js",

@@ -19,6 +19,7 @@ interface MsgProviderProps {
 
 export const MsgProvider = ({ children }: MsgProviderProps) => {
   const [messages, setMessages] = useState<Record<string, string>>({});
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -29,6 +30,8 @@ export const MsgProvider = ({ children }: MsgProviderProps) => {
         setMessages(data);
       } catch (e) {
         console.error('메시지 조회 실패:', e);
+      } finally {
+        setMessagesLoaded(true);
       }
     };
 
@@ -45,6 +48,11 @@ export const MsgProvider = ({ children }: MsgProviderProps) => {
     const message = messages[key];
 
     if (!message) {
+      // 첫 API 응답 전에는 조회할 수 없는 상태이므로 누락으로 기록하지 않습니다.
+      if (!messagesLoaded) {
+        return '';
+      }
+
       console.warn(`메시지를 찾을 수 없습니다: ${key}`);
 
       return key;
@@ -61,7 +69,7 @@ export const MsgProvider = ({ children }: MsgProviderProps) => {
     () => ({
       getMsg,
     }),
-    [messages],
+    [messages, messagesLoaded],
   );
 
   return <MsgContext.Provider value={value}>{children}</MsgContext.Provider>;

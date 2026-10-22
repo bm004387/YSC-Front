@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeAreaProvider, AppSafeAreaView } from '../components/common/AppSafeArea';
 import {
   CommunityCommentPreview,
   CommunityPost,
@@ -320,8 +320,8 @@ function CommunityPostDetailScreen({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.detailScreen} edges={['top', 'bottom']}>
+      <AppSafeAreaProvider>
+        <AppSafeAreaView style={styles.detailScreen} edges={['top', 'bottom']}>
           <View style={styles.detailHeader}>
             <Pressable
               onPress={onClose}
@@ -397,8 +397,8 @@ function CommunityPostDetailScreen({
             toastOpacity={toastOpacity}
             toastTranslateY={toastTranslateY}
           />
-        </SafeAreaView>
-      </SafeAreaProvider>
+        </AppSafeAreaView>
+      </AppSafeAreaProvider>
     </Modal>
   );
 }
