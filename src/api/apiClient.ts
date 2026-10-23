@@ -74,6 +74,18 @@ async function handleExpiredToken(accessToken: string): Promise<void> {
     return;
   }
 
+  // 오래된 요청이 새 로그인 뒤에 401로 끝났을 수 있습니다.
+  // 현재 Keychain 토큰과 다른 요청의 실패는 새 세션을 지우면 안 됩니다.
+  const credentials = await getAuthCredentials().catch(() => null);
+  if (!credentials || credentials.password !== accessToken) {
+    return;
+  }
+
+  // Keychain 조회 중 같은 토큰의 다른 401 처리가 먼저 끝났는지 다시 확인합니다.
+  if (expiredToken === accessToken) {
+    return;
+  }
+
   expiredToken = accessToken;
   await clearAuthCredentials();
   authExpiredHandler?.();

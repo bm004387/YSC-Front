@@ -5,6 +5,7 @@ import { getCachedMsg } from '../utils/msgUtil';
 export interface CommonCodeItem {
   comCd: string;
   comCdNm: string;
+  comCdSortOrd?: number;
   comDtlCd: string;
   comDtlNm: string;
   comDtlDesc: string;

@@ -10,10 +10,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import AccountRecoveryScreen from './src/screens/AccountRecoveryScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import PinSetupScreen from './src/screens/PinSetupScreen';
-import MainScreen from './src/screens/MainScreen';
-import MyInfoScreen from './src/screens/MyInfoScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-import CommunityScreen from './src/screens/CommunityScreen';
+import RecipeAppScreen from './src/screens/RecipeAppScreen';
 import BottomNavigation from './src/components/common/BottomNavigation';
 import BrandLoader from './src/components/common/BrandLoader';
 import { getBottomMenuList } from './src/api/menuApi';
@@ -55,15 +52,13 @@ const SESSION_RESUME_GRACE_MS = 3_000;
 
 interface RouteScreenProps {
   onLogout: () => void;
-  onBack: () => void;
-  onMenuSelect: (item: MenuItem) => void;
 }
 
 const routeScreens: Record<AppRoute, (props: RouteScreenProps) => React.ReactNode> = {
-  main: ({ onLogout }) => <MainScreen onLogout={onLogout} />,
-  myInfo: ({ onBack }) => <MyInfoScreen onBack={onBack} />,
-  settings: ({ onMenuSelect }) => <SettingsScreen onMenuSelect={onMenuSelect} />,
-  community: ({ onBack }) => <CommunityScreen onBack={onBack} />,
+  main: ({ onLogout }) => <RecipeAppScreen activeTab="home" onLogout={onLogout} />,
+  myInfo: ({ onLogout }) => <RecipeAppScreen activeTab="myRecipes" onLogout={onLogout} />,
+  settings: ({ onLogout }) => <RecipeAppScreen activeTab="saved" onLogout={onLogout} />,
+  community: ({ onLogout }) => <RecipeAppScreen activeTab="search" onLogout={onLogout} />,
 };
 
 function isAppRoute(route: string | null): route is AppRoute {
@@ -376,11 +371,7 @@ function AppContent() {
 
             {routeToRender && (
               <View style={{ flex: 1 }}>
-                {routeScreens[routeToRender]({
-                  onLogout: handleLogout,
-                  onBack: () => setScreen('main'),
-                  onMenuSelect: handleMenuSelect,
-                })}
+                {routeScreens[routeToRender]({ onLogout: handleLogout })}
                 <BottomNavigation
                   items={menuItems}
                   accessToken={menuAccessToken}

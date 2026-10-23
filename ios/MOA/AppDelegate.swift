@@ -31,6 +31,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 
+    let window = UIWindow(frame: UIScreen.main.bounds)
+    factory.startReactNative(withModuleName: "Moa", in: window, launchOptions: launchOptions)
+    self.window = window
+
     return true
   }
 }
